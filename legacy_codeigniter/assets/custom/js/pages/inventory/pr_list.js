@@ -1,0 +1,327 @@
+"use strict";
+
+var TKAppInventoryPRList = function () {
+    var table;
+    var datatable;
+    var mobileContainer;
+    var mobilePagination;
+    var flatpickr;
+
+    var initDataTable = function () {
+        table = document.querySelector('#kt_inventory_pr_table');
+        mobileContainer = document.querySelector('#kt_inventory_pr_mobile_container');
+        mobilePagination = document.querySelector('#kt_inventory_pr_mobile_pagination');
+
+        if (!table) return;
+
+        datatable = $(table).DataTable({
+            searchDelay: 500,
+            processing: true,
+            serverSide: true,
+            order: [[1, 'desc']],
+            stateSave: true,
+            autoWidth: false,
+            ajax: {
+                url: hostUrl + "ajax/inventory/stocks/pr_list",
+                type: "POST",
+                data: function(d) {
+                    d.filters = {
+                        status: $('#filter_status').val(),
+                        staff: $('#filter_staff').val(),
+                        date_range: $('#filter_date_range').val()
+                    };
+                }
+            },
+            columns: [
+                { data: 'id' },
+                { data: 'id' },
+                { data: 'date' },
+                { data: 'staff' },
+                { data: 'items_count' },
+                { data: 'total_est' },
+                { data: 'status' },
+                { data: null },
+            ],
+            columnDefs: [
+                {
+                    targets: 0,
+                    orderable: false,
+                    render: function (data) {
+                        return `<div class="form-check form-check-sm form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" value="${data}" />
+                                </div>`;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data) { return `<span class="text-gray-800 fw-bold">${data}</span>`; }
+                },
+                {
+                    targets: 4,
+                    className: 'text-center'
+                },
+                {
+                    targets: 5,
+                    render: function (data) { return `<span class="text-gray-800 fw-bold">Rp ${parseFloat(data).toLocaleString('id-ID')}</span>`; }
+                },
+                {
+                    targets: 6,
+                    render: function (data) {
+                        let statusClass = 'badge-light-secondary';
+                        if (data === 'Draft') statusClass = 'badge-light-secondary';
+                        if (data === 'Menunggu Review') statusClass = 'badge-light-warning';
+                        if (data === 'Sudah Review') statusClass = 'badge-light-success';
+                        return `<span class="badge ${statusClass} fw-bold">${data}</span>`;
+                    }
+                },
+                {
+                    targets: -1,
+                    data: null,
+                    orderable: false,
+                    className: 'text-end',
+                    render: function (data, type, row) {
+                        return `
+                            <a href="#" class="btn btn-sm btn-light btn-active-light-primary btn-flex btn-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                                Aksi
+                                <i class="ki-duotone ki-down fs-5 ms-1"></i>
+                            </a>
+                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4" data-kt-menu="true">
+                                <div class="menu-item px-3">
+                                    <a href="${hostUrl}inventory/purchase-requisition/approval/${row.id}" class="menu-link px-3 text-primary">Review & Approve</a>
+                                </div>
+                                <div class="menu-item px-3">
+                                    <a href="#" class="menu-link px-3">Detail Lengkap</a>
+                                </div>
+                                <div class="separator border-gray-200 my-2"></div>
+                                <div class="menu-item px-3">
+                                    <a href="#" class="menu-link px-3 text-danger">Hapus</a>
+                                </div>
+                            </div>
+                        `;
+                    },
+                },
+            ],
+            "stateSaveParams": function (settings, data) {
+                var widths = [];
+                $(table).find('thead th').each(function() { widths.push($(this).outerWidth()); });
+                data.columnWidths = widths;
+            },
+            "stateLoadParams": function (settings, data) {
+                if (data.columnWidths) {
+                    this.api().columns().every(function (i) {
+                        if (data.columnWidths[i]) $(this.header()).css('width', data.columnWidths[i] + 'px');
+                    });
+                }
+            }
+        });
+
+        datatable.on('draw', function () {
+            KTMenu.createInstances();
+            renderMobileCards();
+            renderMobilePagination();
+            initColumnResize();
+        });
+
+        initColumnResize();
+    };
+
+    var initColumnResize = function() {
+        const ths = table.querySelectorAll('thead th:not(:last-child):not(:first-child)'); 
+        ths.forEach(th => {
+            const existingHandle = th.querySelector('.resize-handle');
+            if (existingHandle) existingHandle.remove();
+            const handle = document.createElement('div');
+            handle.classList.add('resize-handle');
+            th.appendChild(handle);
+            th.style.position = 'relative';
+            let startX, startWidth;
+            handle.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                startX = e.pageX;
+                startWidth = th.offsetWidth;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                document.body.classList.add('resizing');
+                handle.classList.add('resizing');
+            });
+            function onMouseMove(e) {
+                const width = startWidth + (e.pageX - startX);
+                if (width >= 80) { $(th).css('width', width + 'px'); $(th).css('min-width', width + 'px'); }
+            }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                document.body.classList.remove('resizing');
+                handle.classList.remove('resizing');
+                datatable.state.save();
+            }
+        });
+    };
+
+    var initFlatpickr = function() {
+        const element = document.querySelector('#filter_date_range');
+        flatpickr = $(element).flatpickr({
+            altInput: true,
+            altFormat: "F j, Y",
+            dateFormat: "Y-m-d",
+            mode: "range",
+            onChange: function() {
+                datatable.ajax.reload();
+                updateActiveFilters();
+            }
+        });
+    };
+
+    var initFilters = function() {
+        // Initialize Select2 with dropdownParent to fix visibility inside menu
+        $('#filter_status, #filter_staff').select2({
+            dropdownParent: $('#kt_menu_filter'),
+            minimumResultsForSearch: -1,
+            placeholder: "Pilih opsi"
+        });
+    };
+
+    var renderMobileCards = function () {
+        if (!mobileContainer || window.innerWidth >= 768) return;
+        const data = datatable.rows({ page: 'current' }).data();
+        mobileContainer.innerHTML = '';
+        if (data.length === 0) {
+            mobileContainer.innerHTML = '<div class="text-center py-10 text-muted fs-7">Data tidak ditemukan</div>';
+            return;
+        }
+        data.each(function (row, index) {
+            let statusClass = 'badge-light-secondary';
+            if (row.status === 'Draft') statusClass = 'badge-light-secondary';
+            if (row.status === 'Menunggu Review') statusClass = 'badge-light-warning';
+            if (row.status === 'Sudah Review') statusClass = 'badge-light-success';
+            const card = `
+                <div class="card card-flush border-bottom rounded-0" data-kt-element="item">
+                    <div class="card-header min-h-auto py-4 px-5 collapsible cursor-pointer collapsed" data-bs-toggle="collapse" data-bs-target="#kt_pr_list_item_${index}">
+                        <div class="card-title m-0">
+                            <div class="d-flex flex-column">
+                                <span class="text-gray-800 fw-bold fs-6">${row.id}</span>
+                                <span class="text-muted fs-8">${row.date} • Rp ${parseFloat(row.total_est).toLocaleString('id-ID')}</span>
+                            </div>
+                        </div>
+                        <div class="card-toolbar">
+                            <span class="badge ${statusClass} fw-bold fs-9 me-2">${row.status}</span>
+                            <i class="ki-duotone ki-down fs-4 collapsible-active-rotate-180"></i>
+                        </div>
+                    </div>
+                    <div id="kt_pr_list_item_${index}" class="collapse">
+                        <div class="card-body p-5 pt-0">
+                            <div class="separator separator-dashed my-3"></div>
+                            <div class="d-flex flex-stack fs-7 mb-1"><span class="text-gray-500">Staff:</span><span class="text-gray-800 fw-bold">${row.staff}</span></div>
+                            <div class="d-flex flex-stack fs-7 mb-4"><span class="text-gray-500">Item:</span><span class="text-gray-800 fw-bold">${row.items_count} Bahan</span></div>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-sm btn-light-primary btn-flex btn-center px-6" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                                    Aksi PR <i class="ki-duotone ki-down fs-5 ms-2"></i>
+                                </button>
+                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4" data-kt-menu="true">
+                                    <div class="menu-item px-3"><a href="${hostUrl}inventory/purchase-requisition/approval/${row.id}" class="menu-link px-3 text-primary fw-bold">Review & Approve</a></div>
+                                    <div class="menu-item px-3"><a href="#" class="menu-link px-3">Detail Lengkap</a></div>
+                                    <div class="separator border-gray-200 my-2"></div>
+                                    <div class="menu-item px-3"><a href="#" class="menu-link px-3 text-danger">Hapus Pengajuan</a></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            mobileContainer.insertAdjacentHTML('beforeend', card);
+        });
+        KTMenu.createInstances();
+    };
+
+    var renderMobilePagination = function() {
+        if (!mobilePagination || window.innerWidth >= 768) return;
+        const info = datatable.page.info();
+        if (info.pages <= 1) { mobilePagination.innerHTML = ''; return; }
+        let html = `
+            <div class="d-flex flex-stack flex-wrap gap-3 fs-7">
+                <div class="text-gray-700">Hal ${info.page + 1} dari ${info.pages}</div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-light ${info.page === 0 ? 'disabled' : ''}" onclick="TKAppInventoryPRList.setPage('prev')">Sebelumnya</button>
+                    <button class="btn btn-sm btn-light ${info.page === info.pages - 1 ? 'disabled' : ''}" onclick="TKAppInventoryPRList.setPage('next')">Selanjutnya</button>
+                </div>
+            </div>`;
+        mobilePagination.innerHTML = html;
+    };
+
+    var handleSearchDatatable = () => {
+        const filterSearch = document.querySelector('[data-kt-inventory-pr-filter="search"]');
+        if (!filterSearch) return;
+        filterSearch.addEventListener('keyup', function (e) { datatable.search(e.target.value).draw(); });
+    }
+
+    var updateActiveFilters = function() {
+        const container = $('#active-filters-container');
+        container.empty();
+        const selectedStatus = ($('#filter_status').val() || []).filter(v => v !== '');
+        const selectedStaff = ($('#filter_staff').val() || []).filter(v => v !== '');
+        const selectedDate = $('#filter_date_range').val();
+        if (selectedStatus.length === 0 && selectedStaff.length === 0 && !selectedDate) { container.addClass('d-none'); return; }
+        container.removeClass('d-none');
+        if (selectedDate) {
+            container.append(`
+                <div class="badge badge-light-danger border border-danger border-dashed px-3 py-2 d-flex align-items-center">
+                    <span class="me-2">Tanggal: ${selectedDate}</span>
+                    <a href="#" class="btn btn-icon btn-sm btn-active-light-danger w-20px h-20px remove-filter-date"><i class="ki-duotone ki-cross fs-3"><span class="path1"></span><span class="path2"></span></i></a>
+                </div>`);
+        }
+        selectedStatus.forEach(v => {
+            container.append(`
+                <div class="badge badge-light-primary border border-primary border-dashed px-3 py-2 d-flex align-items-center">
+                    <span class="me-2">Status: ${v}</span>
+                    <a href="#" class="btn btn-icon btn-sm btn-active-light-primary w-20px h-20px remove-filter-status" data-value="${v}"><i class="ki-duotone ki-cross fs-3"><span class="path1"></span><span class="path2"></span></i></a>
+                </div>`);
+        });
+        selectedStaff.forEach(v => {
+            container.append(`
+                <div class="badge badge-light-info border border-info border-dashed px-3 py-2 d-flex align-items-center">
+                    <span class="me-2">Staff: ${v}</span>
+                    <a href="#" class="btn btn-icon btn-sm btn-active-light-info w-20px h-20px remove-filter-staff" data-value="${v}"><i class="ki-duotone ki-cross fs-3"><span class="path1"></span><span class="path2"></span></i></a>
+                </div>`);
+        });
+        container.append(`<a href="#" class="text-primary fw-bold fs-7 ms-2 align-self-center" id="clear-all-filters">Hapus Semua</a>`);
+        $('.remove-filter-date').on('click', function(e) { e.preventDefault(); flatpickr.clear(); });
+        $('.remove-filter-status').on('click', function(e) { e.preventDefault(); const val = $(this).data('value'); const current = $('#filter_status').val(); $('#filter_status').val(current.filter(item => item !== val)).trigger('change'); });
+        $('.remove-filter-staff').on('click', function(e) { e.preventDefault(); const val = $(this).data('value'); const current = $('#filter_staff').val(); $('#filter_staff').val(current.filter(item => item !== val)).trigger('change'); });
+        $('#clear-all-filters').on('click', function(e) { e.preventDefault(); flatpickr.clear(); $('#filter_status').val(null).trigger('change'); $('#filter_staff').val(null).trigger('change'); });
+    };
+
+    var handleFilterDatatable = function() {
+        $('#filter_status, #filter_staff').on('change', function() { datatable.ajax.reload(); updateActiveFilters(); });
+        const resetButton = document.querySelector('[data-kt-menu-dismiss="true"][type="reset"]');
+        if (resetButton) {
+            resetButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                flatpickr.clear();
+                $('#filter_status').val(null).trigger('change');
+                $('#filter_staff').val(null).trigger('change');
+            });
+        }
+    };
+
+    return {
+        init: function () {
+            // Initialize menus first
+            KTMenu.createInstances();
+
+            initDataTable();
+            initFlatpickr();
+            initFilters();
+            handleSearchDatatable();
+            handleFilterDatatable();
+            updateActiveFilters();
+            
+            window.addEventListener('resize', function() {
+                renderMobileCards();
+                renderMobilePagination();
+                KTMenu.createInstances(); // Re-init on resize just in case
+            });
+        },
+        setPage: function(dir) { if (dir === 'next') datatable.page('next').draw('page'); else datatable.page('previous').draw('page'); }
+    };
+}();
+
+KTUtil.onDOMContentLoaded(function () { TKAppInventoryPRList.init(); });
