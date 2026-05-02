@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Color;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -148,6 +149,7 @@ class ProductController extends Controller
         }
         
         $products = $query->get();
+        $colors = Color::all()->pluck('hex_code', 'name');
 
         $filename = "products_export_" . date('Ymd_His') . ".csv";
         $headers = [
@@ -161,7 +163,7 @@ class ProductController extends Controller
         $columns = [
             'SKU', 'Name', 'Description', 'Category Name', 'Base Unit', 'Selling Unit', 
             'Minimum Stock Level', 'Is Active', 'Spec Width', 'Spec Grammage', 
-            'Spec Composition', 'Spec Color', 'Spec Motif'
+            'Spec Composition', 'Spec Color', 'Spec Motif', 'Spec Color Hex'
         ];
 
         $callback = function() use($products, $columns) {
@@ -170,6 +172,7 @@ class ProductController extends Controller
 
             foreach ($products as $product) {
                 $specs = $product->specifications ?? [];
+                $colorName = $specs['color'] ?? '';
                 $row = [
                     $product->sku,
                     $product->name,
@@ -182,8 +185,9 @@ class ProductController extends Controller
                     $specs['width'] ?? '',
                     $specs['grammage'] ?? '',
                     $specs['composition'] ?? '',
-                    $specs['color'] ?? '',
-                    $specs['motif'] ?? ''
+                    $colorName,
+                    $specs['motif'] ?? '',
+                    $colors[$colorName] ?? ''
                 ];
                 fputcsv($file, $row);
             }
@@ -227,6 +231,15 @@ class ProductController extends Controller
             } else {
                 $category = Category::first();
                 $categoryId = $category ? $category->id : null;
+            }
+            
+            $colorName = trim($row[11] ?? '');
+            $colorHex = trim($row[13] ?? '');
+            if ($colorName) {
+                Color::updateOrCreate(
+                    ['name' => $colorName],
+                    ['hex_code' => $colorHex ?: null]
+                );
             }
             
             $data = [
@@ -320,14 +333,14 @@ class ProductController extends Controller
         $columns = [
             'SKU', 'Name', 'Description', 'Category Name', 'Base Unit', 'Selling Unit', 
             'Minimum Stock Level', 'Is Active', 'Spec Width', 'Spec Grammage', 
-            'Spec Composition', 'Spec Color', 'Spec Motif'
+            'Spec Composition', 'Spec Color', 'Spec Motif', 'Spec Color Hex'
         ];
 
         $callback = function() use($columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
             fputcsv($file, [
-                'SKU-001', 'Kain Combed 30s', 'Kain katun berkualitas', 'Cotton Combed', 'Kg', 'Roll', '10', '1', '36"', '140-150', '100% Cotton', 'Hitam Reaktif', 'Polos'
+                'SKU-001', 'Kain Combed 30s', 'Kain katun berkualitas', 'Cotton Combed', 'Kg', 'Roll', '10', '1', '36"', '140-150', '100% Cotton', 'Hitam Reaktif', 'Polos', '#000000'
             ]);
             fclose($file);
         };
