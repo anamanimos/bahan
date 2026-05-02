@@ -12,7 +12,7 @@ class AdminClaimController extends Controller
             'secret_code' => 'required|string',
         ]);
 
-        if ($request->secret_code === env('ADMIN_SECRET_CODE')) {
+        if ($request->secret_code === config('app.admin_secret_code')) {
             $user = auth()->user();
             $user->assignRole('admin');
             return redirect('/dashboard')->with('success', 'Berhasil claim akses Admin!');

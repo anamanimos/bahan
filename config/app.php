@@ -58,6 +58,7 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
 
     'asset_url' => env('ASSET_URL'),
+    'admin_secret_code' => env('ADMIN_SECRET_CODE'),
 
     /*
     |--------------------------------------------------------------------------
