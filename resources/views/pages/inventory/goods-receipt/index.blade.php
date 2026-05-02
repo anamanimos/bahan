@@ -18,8 +18,8 @@
                 <div class="card card-flush h-100 py-4 bg-light-info border-0 shadow-none">
                     <div class="card-header pt-2 px-3 px-md-9">
                         <div class="card-title d-flex flex-column">
-                            <span class="fs-2 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">8</span>
-                            <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">In Progress</span>
+                            <span class="fs-2 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ number_format($stats['in_progress']) }}</span>
+                            <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">PR Approved</span>
                         </div>
                     </div>
                     <div class="card-body d-none d-md-flex align-items-end pt-0 px-9">
@@ -31,8 +31,8 @@
                 <div class="card card-flush h-100 py-4 bg-light-success border-0 shadow-none">
                     <div class="card-header pt-2 px-3 px-md-9">
                         <div class="card-title d-flex flex-column">
-                            <span class="fs-2 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">128</span>
-                            <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">Received</span>
+                            <span class="fs-2 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ number_format($stats['received']) }}</span>
+                            <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">GR Received</span>
                         </div>
                     </div>
                     <div class="card-body d-none d-md-flex align-items-end pt-0 px-9">
@@ -44,8 +44,8 @@
                 <div class="card card-flush h-100 py-4 bg-light-primary border-0 shadow-none">
                     <div class="card-header pt-2 px-3 px-md-9">
                         <div class="card-title d-flex flex-column">
-                            <span class="fs-4 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2 text-nowrap">2,5k</span>
-                            <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">Total Items</span>
+                            <span class="fs-4 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2 text-nowrap">{{ $stats['total_items_formatted'] }}</span>
+                            <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">Total Qty (Pcs/Mtr)</span>
                         </div>
                     </div>
                     <div class="card-body d-none d-md-flex align-items-end pt-0 px-9">
@@ -145,6 +145,7 @@
 @endsection
 
 @push('styles')
+    <link href="{{ asset('assets/vendors/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
 <style>
 .resize-handle { position: absolute; top: 0; right: 0; width: 5px; cursor: col-resize; user-select: none; height: 100%; z-index: 10; }
 .resize-handle:hover, .resize-handle.resizing { background: rgba(0, 158, 247, 0.5); }
@@ -155,5 +156,6 @@ body.resizing { cursor: col-resize !important; }
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('assets/custom/js/pages/inventory/goods-receipt/list.js') }}"></script>
+    <script src="{{ asset('assets/vendors/plugins/custom/datatables/datatables.bundle.js') }}"></script>
+    <script src="{{ asset('assets/custom/js/pages/inventory/goods-receipt/list.js') }}?v={{ time() }}"></script>
 @endpush

@@ -14,14 +14,38 @@ use Illuminate\Support\Facades\Route;
 */
 
 use App\Http\Controllers\Inventory\GoodsReceiptController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Admin\ApiTokenController;
 
-Route::get('/', function () {
-    return redirect('/inventory/goods-receipt');
-});
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
+Route::get('/auth/sso/redirect', [AuthController::class, 'redirectToERP'])->name('sso.redirect');
+Route::get('/auth/sso', [AuthController::class, 'handleSSOCallback'])->name('sso.callback');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/dashboard', function () {
-    return redirect('/inventory/goods-receipt');
-})->name('dashboard');
+Route::middleware(['auth', 'check.access'])->group(function () {
+    Route::post('/claim-admin', [\App\Http\Controllers\AdminClaimController::class, 'claim']);
+
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index']);
+        Route::post('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'store']);
+        Route::put('/admin/users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'update']);
+        Route::delete('/admin/users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'destroy']);
+    });
+
+    Route::get('/admin/api/token', [ApiTokenController::class, 'index']);
+    Route::post('/admin/api/token', [ApiTokenController::class, 'store']);
+    Route::delete('/admin/api/token/{id}', [ApiTokenController::class, 'destroy']);
+    
+    Route::get('/', function () {
+        return redirect('/dashboard');
+    });
+
+    Route::get('/dashboard', function () {
+        if (auth()->user()->roles->count() === 0) {
+            return view('dashboard');
+        }
+        return redirect('/inventory/goods-receipt');
+    })->name('dashboard');
 
 Route::prefix('inventory')->group(function () {
     // Goods Receipt Routes
@@ -35,6 +59,7 @@ Route::prefix('inventory')->group(function () {
     Route::prefix('purchase-requisition')->group(function () {
         Route::get('/', [\App\Http\Controllers\Inventory\PurchaseRequisitionController::class, 'index'])->name('inventory.purchase-requisition.index');
         Route::get('/create', [\App\Http\Controllers\Inventory\PurchaseRequisitionController::class, 'create'])->name('inventory.purchase-requisition.create');
+        Route::post('/store', [\App\Http\Controllers\Inventory\PurchaseRequisitionController::class, 'store'])->name('inventory.purchase-requisition.store');
         Route::get('/{id}', [\App\Http\Controllers\Inventory\PurchaseRequisitionController::class, 'show'])->name('inventory.purchase-requisition.show');
     });
 
@@ -56,6 +81,17 @@ Route::prefix('master')->group(function () {
         Route::get('/', [\App\Http\Controllers\Master\ProductController::class, 'index'])->name('master.product.index');
         Route::get('/create', [\App\Http\Controllers\Master\ProductController::class, 'create'])->name('master.product.create');
         Route::post('/store', [\App\Http\Controllers\Master\ProductController::class, 'store'])->name('master.product.store');
+        Route::get('/edit/{id}', [\App\Http\Controllers\Master\ProductController::class, 'edit'])->name('master.product.edit');
+        Route::put('/update/{id}', [\App\Http\Controllers\Master\ProductController::class, 'update'])->name('master.product.update');
+        Route::post('/export', [\App\Http\Controllers\Master\ProductController::class, 'exportCsv'])->name('master.product.export');
+        Route::post('/import', [\App\Http\Controllers\Master\ProductController::class, 'importCsv'])->name('master.product.import');
+        Route::get('/download-template', [\App\Http\Controllers\Master\ProductController::class, 'downloadTemplate'])->name('master.product.template');
+    });
+
+    Route::prefix('supplier')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Master\SupplierController::class, 'index'])->name('master.supplier.index');
+        Route::get('/create', [\App\Http\Controllers\Master\SupplierController::class, 'create'])->name('master.supplier.create');
+        Route::get('/edit/{id}', [\App\Http\Controllers\Master\SupplierController::class, 'edit'])->name('master.supplier.edit');
     });
 
     Route::prefix('category')->group(function () {
@@ -66,7 +102,17 @@ Route::prefix('master')->group(function () {
     // AJAX Routes for Master
     Route::prefix('ajax')->group(function () {
         Route::post('/product/list', [\App\Http\Controllers\Ajax\Master\ProductAjaxController::class, 'list'])->name('master.ajax.product.list');
+        Route::post('/product/duplicate', [\App\Http\Controllers\Ajax\Master\ProductAjaxController::class, 'duplicate'])->name('master.ajax.product.duplicate');
+        Route::post('/product/delete', [\App\Http\Controllers\Ajax\Master\ProductAjaxController::class, 'destroy'])->name('master.ajax.product.delete');
+        Route::post('/product/merge', [\App\Http\Controllers\Ajax\Master\ProductAjaxController::class, 'merge'])->name('master.ajax.product.merge');
+        
+        Route::post('/supplier/list', [\App\Http\Controllers\Ajax\Master\SupplierAjaxController::class, 'list'])->name('master.ajax.supplier.list');
+        Route::post('/supplier/store', [\App\Http\Controllers\Ajax\Master\SupplierAjaxController::class, 'store'])->name('master.ajax.supplier.store');
+        Route::post('/supplier/update/{id}', [\App\Http\Controllers\Ajax\Master\SupplierAjaxController::class, 'update'])->name('master.ajax.supplier.update');
+        Route::post('/supplier/delete', [\App\Http\Controllers\Ajax\Master\SupplierAjaxController::class, 'destroy'])->name('master.ajax.supplier.delete');
+        Route::post('/supplier/merge', [\App\Http\Controllers\Ajax\Master\SupplierAjaxController::class, 'merge'])->name('master.ajax.supplier.merge');
         Route::post('/category/store', [\App\Http\Controllers\Ajax\Master\CategoryAjaxController::class, 'store'])->name('master.ajax.category.store');
         Route::post('/color/store', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'store'])->name('master.ajax.color.store');
     });
+});
 });

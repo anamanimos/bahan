@@ -28,10 +28,18 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
         ]);
 
-        Category::create([
+        $category = Category::create([
             'name' => $request->name,
             'parent_id' => $request->parent_id,
         ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori berhasil ditambahkan.',
+                'data' => $category
+            ]);
+        }
 
         return redirect()->route('master.category.index')
             ->with('success', 'Kategori berhasil ditambahkan.');

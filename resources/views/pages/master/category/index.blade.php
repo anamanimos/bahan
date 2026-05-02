@@ -26,7 +26,7 @@
                 </div>
             </div>
             <div class="card-body pt-5">
-                <form action="{{ route('master.category.store') }}" method="POST" class="form d-flex flex-column">
+                <form id="kt_ecommerce_add_category_form" action="{{ route('master.category.store') }}" method="POST" class="form d-flex flex-column">
                     @csrf
                     <div class="fv-row mb-7">
                         <label class="fs-6 fw-semibold form-label mt-3"><span class="required">Nama Kategori</span></label>
@@ -44,8 +44,9 @@
                     </div>
                     <div class="separator mb-6"></div>
                     <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" id="kt_ecommerce_add_category_submit" class="btn btn-primary w-100">
                             <span class="indicator-label">Simpan Kategori</span>
+                            <span class="indicator-progress">Mohon tunggu... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                         </button>
                     </div>
                 </form>
@@ -98,3 +99,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="{{ asset('assets/custom/js/pages/master/categories.js') }}?v={{ time() }}"></script>
+@endpush

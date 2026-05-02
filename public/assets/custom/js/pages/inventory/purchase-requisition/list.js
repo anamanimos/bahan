@@ -23,6 +23,15 @@ var TKAppInventoryPurchaseRequisitionList = function () {
                 type: "POST",
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
             },
+            language: {
+                emptyTable: `
+                    <div class="d-flex flex-column flex-center text-center p-10">
+                        <i class="ki-duotone ki-file-added fs-5x text-muted mb-5"><span class="path1"></span><span class="path2"></span></i>
+                        <div class="fw-bold fs-3 text-gray-800 mb-2">Belum ada Pengajuan Beli</div>
+                        <div class="text-muted fw-semibold fs-6">Silakan buat pengajuan baru untuk mulai mencatat.</div>
+                    </div>
+                `
+            },
             columns: [
                 { data: 'id' },
                 { data: 'id' },

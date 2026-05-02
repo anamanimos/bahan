@@ -82,9 +82,9 @@
                                                 <img alt="Logo" src="{{ asset('assets/vendors/media/avatars/300-3.jpg') }}" />
                                             </div>
                                             <div class="d-flex flex-column">
-                                                <div class="fw-bold d-flex align-items-center fs-5">User ERP
+                                                <div class="fw-bold d-flex align-items-center fs-5">{{ auth()->user()->name ?? 'User ERP' }}
                                                 <span class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2">Admin</span></div>
-                                                <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">user@erp.com</a>
+                                                <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">{{ auth()->user()->email ?? 'user@erp.com' }}</a>
                                             </div>
                                         </div>
                                     </div>
@@ -93,7 +93,10 @@
                                         <a href="{{ url('profile') }}" class="menu-link px-5">My Profile</a>
                                     </div>
                                     <div class="menu-item px-5">
-                                        <a href="{{ url('logout') }}" class="menu-link px-5">Sign Out</a>
+                                        <a href="#" class="menu-link px-5" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Sign Out</a>
+                                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                            @csrf
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -128,6 +131,7 @@
                                         <span class="menu-title">Dashboard</span>
                                     </a>
                                 </div>
+                                @hasanyrole('admin|user')
                                 <div class="menu-item pt-5">
                                     <div class="menu-content">
                                         <span class="menu-heading fw-bold text-uppercase fs-7">Inventory</span>
@@ -170,6 +174,39 @@
                                         <span class="menu-title">Produk</span>
                                     </a>
                                 </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('master/supplier*') ? 'active' : '' }}" href="{{ url('master/supplier') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-shop fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span></i>
+                                        </span>
+                                        <span class="menu-title">Supplier</span>
+                                    </a>
+                                </div>
+                                @endhasanyrole
+
+                                @role('admin')
+                                <div class="menu-item pt-5">
+                                    <div class="menu-content">
+                                        <span class="menu-heading fw-bold text-uppercase fs-7 text-danger">Super Admin</span>
+                                    </div>
+                                </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('admin/users*') ? 'active' : '' }}" href="{{ url('admin/users') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-user-square fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                                        </span>
+                                        <span class="menu-title">User Akses</span>
+                                    </a>
+                                </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('admin/api*') ? 'active' : '' }}" href="{{ url('admin/api') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-key fs-2"><span class="path1"></span><span class="path2"></span></i>
+                                        </span>
+                                        <span class="menu-title">API</span>
+                                    </a>
+                                </div>
+                                @endrole
                             </div>
                         </div>
                     </div>
@@ -244,5 +281,20 @@
     
     <!-- Custom Javascript -->
     @stack('scripts')
+    
+    <script>
+        // Global AJAX setup to handle CSRF tokens and 419 session expired errors
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                if (jqXHR.status === 419) {
+                    console.error("CSRF token mismatch. Reloading page...");
+                    window.location.reload();
+                }
+            }
+        });
+    </script>
 </body>
 </html>

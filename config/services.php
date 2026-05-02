@@ -31,4 +31,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'erp' => [
+        'uuid' => env('ERP_SSO_UUID'),
+        'url' => env('ERP_SSO_URL'),
+    ],
+
 ];

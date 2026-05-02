@@ -18,7 +18,7 @@
                 <div class="card card-flush h-100 py-4 bg-light-warning border-0 shadow-none">
                     <div class="card-header pt-2 px-3 px-md-9">
                         <div class="card-title d-flex flex-column">
-                            <span class="fs-2 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">12</span>
+                            <span class="fs-2 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ number_format($stats['pending']) }}</span>
                             <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">Pending</span>
                         </div>
                     </div>
@@ -31,7 +31,7 @@
                 <div class="card card-flush h-100 py-4 bg-light-primary border-0 shadow-none">
                     <div class="card-header pt-2 px-3 px-md-9">
                         <div class="card-title d-flex flex-column">
-                            <span class="fs-2 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">45</span>
+                            <span class="fs-2 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ number_format($stats['approved']) }}</span>
                             <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">Approved</span>
                         </div>
                     </div>
@@ -44,8 +44,8 @@
                 <div class="card card-flush h-100 py-4 bg-light-success border-0 shadow-none">
                     <div class="card-header pt-2 px-3 px-md-9">
                         <div class="card-title d-flex flex-column">
-                            <span class="fs-4 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2 text-nowrap">Rp 12M</span>
-                            <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">Spend</span>
+                            <span class="fs-4 fs-md-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2 text-nowrap">{{ $stats['spend_formatted'] }}</span>
+                            <span class="text-gray-600 pt-1 fw-semibold fs-9 fs-md-6">Total Spend</span>
                         </div>
                     </div>
                     <div class="card-body d-none d-md-flex align-items-end pt-0 px-9">
@@ -136,6 +136,7 @@
 @endsection
 
 @push('styles')
+    <link href="{{ asset('assets/vendors/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
 <style>
 .resize-handle { position: absolute; top: 0; right: 0; width: 5px; cursor: col-col-resize; user-select: none; height: 100%; z-index: 10; }
 .resize-handle:hover, .resize-handle.resizing { background: rgba(0, 158, 247, 0.5); }
@@ -144,5 +145,6 @@ body.resizing { cursor: col-resize !important; }
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('assets/custom/js/pages/inventory/purchase-requisition/list.js') }}"></script>
+    <script src="{{ asset('assets/vendors/plugins/custom/datatables/datatables.bundle.js') }}"></script>
+    <script src="{{ asset('assets/custom/js/pages/inventory/purchase-requisition/list.js') }}?v={{ time() }}"></script>
 @endpush

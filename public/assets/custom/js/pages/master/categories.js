@@ -69,28 +69,79 @@ var TKAppMasterCategories = function () {
             e.preventDefault();
             const submitButton = form.querySelector('#kt_ecommerce_add_category_submit');
             
+            // Show loading
+            Swal.fire({
+                text: "Sedang menyimpan data...",
+                icon: "info",
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             submitButton.setAttribute('data-kt-indicator', 'on');
             submitButton.disabled = true;
 
-            // Mock success
-            setTimeout(function() {
-                submitButton.removeAttribute('data-kt-indicator');
-                submitButton.disabled = false;
-                
-                Swal.fire({
-                    text: "Kategori berhasil ditambahkan!",
-                    icon: "success",
-                    buttonsStyling: false,
-                    confirmButtonText: "Ok, mengerti!",
-                    customClass: {
-                        confirmButton: "btn btn-primary"
+            const action = form.getAttribute('action');
+            const method = form.getAttribute('method') || 'POST';
+            const formData = new FormData(form);
+
+            $.ajax({
+                url: action,
+                type: method,
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    if (response.success) {
+                        Swal.fire({
+                            text: response.message,
+                            icon: "success",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, mengerti!",
+                            customClass: { confirmButton: "btn btn-primary" }
+                        }).then(function (result) {
+                            form.reset();
+                            const parentSelect = $(form.querySelector('[name="parent_id"]'));
+                            if (parentSelect.length) {
+                                parentSelect.val(null).trigger('change');
+                            }
+                            if (tree.jstree(true)) {
+                                tree.jstree(true).refresh();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            text: response.message || "Terjadi kesalahan saat menyimpan data.",
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, mengerti!",
+                            customClass: { confirmButton: "btn btn-primary" }
+                        });
                     }
-                }).then(function() {
-                    form.reset();
-                    $(form.querySelector('[name="parent_id"]')).val(null).trigger('change');
-                    tree.jstree(true).refresh();
-                });
-            }, 1000);
+                },
+                error: function (xhr) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+                    
+                    let message = "Terjadi kesalahan sistem.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        text: message,
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, mengerti!",
+                        customClass: { confirmButton: "btn btn-primary" }
+                    });
+                }
+            });
         });
     };
 

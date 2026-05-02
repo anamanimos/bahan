@@ -22,7 +22,7 @@ var TKAppInventoryGoodsReceiptList = function () {
             stateSave: true,
             autoWidth: false,
             ajax: {
-                url: hostUrl + "ajax/inventory/goods-receipt/list",
+                url: hostUrl + "inventory/ajax/goods-receipt/list",
                 type: "POST",
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -33,6 +33,15 @@ var TKAppInventoryGoodsReceiptList = function () {
                         date_range: $('#filter_date_range').val()
                     };
                 }
+            },
+            language: {
+                emptyTable: `
+                    <div class="d-flex flex-column flex-center text-center p-10">
+                        <i class="ki-duotone ki-delivery-2 fs-5x text-muted mb-5"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span></i>
+                        <div class="fw-bold fs-3 text-gray-800 mb-2">Belum ada Nota Masuk</div>
+                        <div class="text-muted fw-semibold fs-6">Data penerimaan barang akan tampil di sini.</div>
+                    </div>
+                `
             },
             columns: [
                 { data: 'id' },

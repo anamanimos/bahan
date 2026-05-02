@@ -82,6 +82,17 @@ var TKAppMasterProductForm = function () {
                 return;
             }
 
+            // Show loading
+            Swal.fire({
+                text: "Sedang menyimpan warna...",
+                icon: "info",
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             $.ajax({
                 url: hostUrl + "master/ajax/color/store",
                 type: "POST",
@@ -134,6 +145,17 @@ var TKAppMasterProductForm = function () {
                 Swal.fire({ text: "Nama kategori wajib diisi!", icon: "error", buttonsStyling: false, confirmButtonText: "Ok, mengerti", customClass: { confirmButton: "btn btn-primary" } });
                 return;
             }
+
+            // Show loading
+            Swal.fire({
+                text: "Sedang menyimpan kategori...",
+                icon: "info",
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             $.ajax({
                 url: hostUrl + "master/ajax/category/store",
@@ -220,15 +242,78 @@ var TKAppMasterProductForm = function () {
                 return;
             }
 
+            // Show loading
+            Swal.fire({
+                text: "Sedang menyimpan data...",
+                icon: "info",
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             submitButton.setAttribute('data-kt-indicator', 'on');
             submitButton.disabled = true;
 
-            // Simulate server response for visual feedback
-            setTimeout(() => {
-                submitButton.removeAttribute('data-kt-indicator');
-                submitButton.disabled = false;
-                form.submit();
-            }, 1000);
+            const formData = new FormData(form);
+            const action = form.getAttribute('action');
+            const method = form.getAttribute('method') || 'POST';
+
+            $.ajax({
+                url: action,
+                type: method,
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    if (response.success) {
+                        Swal.fire({
+                            text: response.message,
+                            icon: "success",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, mengerti!",
+                            customClass: { confirmButton: "btn btn-primary" }
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                window.location.href = hostUrl + "master/product";
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            text: response.message || "Terjadi kesalahan saat menyimpan data.",
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, mengerti!",
+                            customClass: { confirmButton: "btn btn-primary" }
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+                    
+                    let message = "Terjadi kesalahan sistem.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        // Handle Laravel validation errors
+                        const errors = xhr.responseJSON.errors;
+                        message = Object.values(errors).flat().join('<br>');
+                    }
+
+                    Swal.fire({
+                        html: message,
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, mengerti!",
+                        customClass: { confirmButton: "btn btn-primary" }
+                    });
+                }
+            });
         });
     };
 

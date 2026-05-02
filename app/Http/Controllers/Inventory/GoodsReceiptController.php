@@ -12,7 +12,21 @@ class GoodsReceiptController extends Controller
      */
     public function index()
     {
-        return view('pages.inventory.goods-receipt.index');
+        $stats = [
+            'in_progress' => \App\Models\PurchaseRequisition::where('status', 'Approved')->count(),
+            'received' => \App\Models\GoodsReceipt::count(),
+            'total_items' => \DB::table('goods_receipt_items')->sum('received_quantity')
+        ];
+
+        // Format total items
+        $items = $stats['total_items'];
+        if ($items >= 1000) {
+            $stats['total_items_formatted'] = round($items / 1000, 1) . 'k';
+        } else {
+            $stats['total_items_formatted'] = number_format($items, 0, ',', '.');
+        }
+
+        return view('pages.inventory.goods-receipt.index', compact('stats'));
     }
 
     /**
