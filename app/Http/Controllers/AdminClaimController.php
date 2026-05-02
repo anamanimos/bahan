@@ -14,6 +14,7 @@ class AdminClaimController extends Controller
 
         if ($request->secret_code === config('app.admin_secret_code')) {
             $user = auth()->user();
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
             $user->assignRole('admin');
             return redirect('/dashboard')->with('success', 'Berhasil claim akses Admin!');
         }
