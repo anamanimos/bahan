@@ -4,23 +4,255 @@ var TKAppInventoryGoodsReceiptForm = function () {
     var form;
     var submitButton;
 
+    // --- Companion Camera State ---
+    var companionToken = null;
+    var companionPollInterval = null;
+    var companionPhotoUrl = null; // URL of photo received from companion
+
+    // --- UI Helper: Show only one photo panel ---
+    var showPanel = function(panelId) {
+        // Hide all panels
+        $('#kt_goods_receipt_photo_options').addClass('d-none');
+        $('#kt_goods_receipt_companion_panel').addClass('d-none');
+        $('#kt_goods_receipt_companion_connected').addClass('d-none');
+        $('#kt_goods_receipt_invoice_preview_container').addClass('d-none');
+        // Show the requested one
+        if (panelId) {
+            $(panelId).removeClass('d-none');
+        }
+    };
+
+    // --- Check for existing companion session on page load ---
+    var checkExistingSession = function() {
+        $.ajax({
+            url: hostUrl + "companion/check-session",
+            type: "GET",
+            success: function(response) {
+                if (response.success && response.has_session) {
+                    companionToken = response.token;
+
+                    if (response.phone_connected) {
+                        // HP is already connected! Show connected panel
+                        // Clear old photo for new nota
+                        $.ajax({
+                            url: hostUrl + "companion/clear-photo/" + companionToken,
+                            type: "POST",
+                            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+                        });
+
+                        showPanel('#kt_goods_receipt_companion_connected');
+                        startCompanionPolling();
+                    }
+                    // If session exists but phone not connected, just show normal options
+                }
+            }
+        });
+    };
+
     var handleInvoiceUpload = function() {
         const input = $('#kt_goods_receipt_invoice_input');
         const preview = $('#kt_goods_receipt_invoice_preview');
-        const previewContainer = $('#kt_goods_receipt_invoice_preview_container');
-        const placeholder = $('#kt_goods_receipt_invoice_placeholder');
 
+        // Option 1: Pick from gallery
+        $('#kt_goods_receipt_option_gallery').on('click', function() {
+            input.trigger('click');
+        });
+
+        // Handle file selection
         input.on('change', function() {
             const file = this.files[0];
             if (file) {
+                stopCompanionPolling();
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.attr('src', e.target.result);
-                    previewContainer.removeClass('d-none');
-                    placeholder.addClass('d-none');
+                    showPanel('#kt_goods_receipt_invoice_preview_container');
+                    companionPhotoUrl = null; // Using file input, not companion
                 }
                 reader.readAsDataURL(file);
             }
+        });
+
+        // Option 2: Companion camera
+        $('#kt_goods_receipt_option_companion').on('click', function() {
+            startCompanionSession();
+        });
+
+        // Cancel companion (go back to options)
+        $('#companion_cancel_btn').on('click', function() {
+            stopCompanionPolling();
+            showPanel('#kt_goods_receipt_photo_options');
+        });
+
+        // Switch to gallery from connected panel
+        $('#companion_switch_gallery_btn').on('click', function() {
+            input.trigger('click');
+        });
+
+        // Disconnect companion
+        $('#companion_disconnect_btn').on('click', function() {
+            stopCompanionPolling();
+            companionToken = null;
+            showPanel('#kt_goods_receipt_photo_options');
+        });
+
+        // Change photo (go back to options or connected panel)
+        $('#kt_goods_receipt_change_photo').on('click', function() {
+            preview.attr('src', '');
+            input.val('');
+            companionPhotoUrl = null;
+
+            // If companion is still active, go to connected panel
+            if (companionToken) {
+                // Clear old photo on server for new one
+                $.ajax({
+                    url: hostUrl + "companion/clear-photo/" + companionToken,
+                    type: "POST",
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+                });
+                showPanel('#kt_goods_receipt_companion_connected');
+                startCompanionPolling();
+            } else {
+                showPanel('#kt_goods_receipt_photo_options');
+            }
+        });
+    };
+
+    // --- Companion Camera Functions ---
+
+    var startCompanionSession = function() {
+        const qrLoading = $('#companion_qr_loading');
+        const qrDisplay = $('#companion_qr_display');
+        const qrCodeContainer = $('#companion_qr_code');
+
+        // Show QR panel with loading
+        showPanel('#kt_goods_receipt_companion_panel');
+        qrLoading.removeClass('d-none');
+        qrDisplay.addClass('d-none');
+
+        // Request session (reuses existing if available)
+        $.ajax({
+            url: hostUrl + "companion/session",
+            type: "POST",
+            data: { context_type: 'goods_receipt' },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function(response) {
+                if (response.success) {
+                    companionToken = response.token;
+                    
+                    qrCodeContainer.empty();
+                    
+                    if (typeof QRCode !== 'undefined') {
+                        new QRCode(qrCodeContainer[0], {
+                            text: response.url,
+                            width: 180,
+                            height: 180,
+                            colorDark: '#1B1B28',
+                            colorLight: '#FFFFFF',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                        
+                        qrLoading.addClass('d-none');
+                        qrDisplay.removeClass('d-none');
+                    } else {
+                        // Fallback: show URL as text
+                        qrCodeContainer.html(
+                            '<div class="p-3 bg-light rounded">' +
+                            '<div class="fs-9 text-muted mb-1">Buka URL ini di HP:</div>' +
+                            '<input type="text" class="form-control form-control-sm fs-9" value="' + response.url + '" readonly onclick="this.select()" />' +
+                            '</div>'
+                        );
+                        qrLoading.addClass('d-none');
+                        qrDisplay.removeClass('d-none');
+                    }
+
+                    startCompanionPolling();
+                }
+            },
+            error: function() {
+                showPanel('#kt_goods_receipt_photo_options');
+                Swal.fire({
+                    text: "Gagal membuat sesi companion. Silakan coba lagi.",
+                    icon: "error",
+                    buttonsStyling: false,
+                    confirmButtonText: "Ok",
+                    customClass: { confirmButton: "btn btn-primary" }
+                });
+            }
+        });
+    };
+
+    var startCompanionPolling = function() {
+        if (companionPollInterval) {
+            clearInterval(companionPollInterval);
+        }
+
+        companionPollInterval = setInterval(function() {
+            if (!companionToken) return;
+
+            $.ajax({
+                url: hostUrl + "companion/check-photo/" + companionToken,
+                type: "GET",
+                success: function(response) {
+                    if (response.success) {
+                        // Update HP connection status in QR panel
+                        if (response.phone_connected) {
+                            $('#companion_hp_status').html(
+                                '<span class="badge badge-light-success fs-9">' +
+                                '<i class="ki-duotone ki-check-circle fs-8 me-1"><span class="path1"></span><span class="path2"></span></i>' +
+                                'HP Terhubung' +
+                                '</span>'
+                            );
+
+                            // If we're showing QR panel but phone just connected,
+                            // switch to connected panel
+                            if (!$('#kt_goods_receipt_companion_panel').hasClass('d-none')) {
+                                showPanel('#kt_goods_receipt_companion_connected');
+                            }
+                        }
+
+                        // Photo received!
+                        if (response.has_photo && response.photo_url) {
+                            stopCompanionPolling();
+                            handleCompanionPhotoReceived(response.photo_url);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 410) {
+                        stopCompanionPolling();
+                        companionToken = null;
+                        $('#companion_hp_status').html(
+                            '<span class="badge badge-light-danger fs-9">Sesi expired</span>'
+                        );
+                    }
+                }
+            });
+        }, 3000); // Poll every 3 seconds
+    };
+
+    var stopCompanionPolling = function() {
+        if (companionPollInterval) {
+            clearInterval(companionPollInterval);
+            companionPollInterval = null;
+        }
+    };
+
+    var handleCompanionPhotoReceived = function(photoUrl) {
+        const preview = $('#kt_goods_receipt_invoice_preview');
+
+        companionPhotoUrl = photoUrl;
+        preview.attr('src', photoUrl);
+        showPanel('#kt_goods_receipt_invoice_preview_container');
+
+        Swal.fire({
+            text: "Foto berhasil diterima dari HP! 📸",
+            icon: "success",
+            buttonsStyling: false,
+            confirmButtonText: "Ok",
+            customClass: { confirmButton: "btn btn-primary" },
+            timer: 3000,
+            timerProgressBar: true
         });
     };
 
@@ -47,7 +279,6 @@ var TKAppInventoryGoodsReceiptForm = function () {
 
                 if (!identifier) return;
 
-                // Fetch real data from server
                 $.ajax({
                     url: hostUrl + "inventory/ajax/goods-receipt/get-purchase-requisition",
                     type: "GET",
@@ -55,7 +286,6 @@ var TKAppInventoryGoodsReceiptForm = function () {
                     success: function(response) {
                         emptyState.addClass('d-none');
                         
-                        // Auto-select supplier if not set
                         if (!$('#goods_receipt_supplier_id').val() && response.supplier_id) {
                             $('#goods_receipt_supplier_id').val(response.supplier_id).trigger('change');
                         }
@@ -79,15 +309,12 @@ var TKAppInventoryGoodsReceiptForm = function () {
                             template.find('input[name="quantity[]"]').val(item.requested_quantity);
                             template.find('input[name="price[]"]').val(item.estimated_unit_price);
                             
-                            // Ensure display is shown and select is hidden for PR items
                             template.find('[data-kt-element="product-display"]').removeClass('d-none');
                             template.find('[data-kt-element="product-select-container"]').addClass('d-none');
                             template.find('[data-kt-element="qty-purchase-requisition-container"]').removeClass('d-none');
                             
-                            // Set value and disable select for PR items to ensure only the hidden input is sent
                             template.find('select[name="product_id[]"]').prop('disabled', true);
                             
-                            // Hidden fields for submission
                             template.append(`<input type="hidden" name="product_id[]" value="${item.product_id}">`);
                             template.append(`<input type="hidden" name="item_purchase_requisition_item_id[]" value="${item.id}">`);
                             
@@ -136,7 +363,6 @@ var TKAppInventoryGoodsReceiptForm = function () {
             
             template.find('[data-kt-element="product-col"]').removeClass('col-md-3').addClass('col-md-5');
             
-            // Product select
             const productSelect = template.find('select[name="product_id[]"]');
             productSelect.select2({
                 placeholder: "Cari Bahan...",
@@ -149,7 +375,6 @@ var TKAppInventoryGoodsReceiptForm = function () {
                 }
             });
 
-            // Context toggle
             const contextSelect = template.find('[data-kt-element="context-type"]');
             const orderContainer = template.find('[data-kt-element="order-container"]');
             const orderSelect = template.find('[data-kt-element="order-select"]');
@@ -163,7 +388,7 @@ var TKAppInventoryGoodsReceiptForm = function () {
                             width: '100%',
                             placeholder: "Pilih Order...",
                             ajax: {
-                                url: hostUrl + "ajax/sales/orders/search", // Future implementation
+                                url: hostUrl + "ajax/sales/orders/search",
                                 dataType: 'json',
                                 delay: 250,
                                 data: params => ({ q: params.term }),
@@ -220,10 +445,9 @@ var TKAppInventoryGoodsReceiptForm = function () {
 
         if (!form) return;
 
-        // Detect selection of "Add New"
         supplierSelect.on('change', function() {
             if ($(this).val() === 'add_new') {
-                $(this).val(null).trigger('change'); // Reset selection
+                $(this).val(null).trigger('change');
                 modal.modal('show');
             }
         });
@@ -278,6 +502,14 @@ var TKAppInventoryGoodsReceiptForm = function () {
 
             const formData = new FormData(form);
 
+            // If photo came from companion (not file input), add the URL
+            if (companionPhotoUrl) {
+                formData.append('companion_photo_url', companionPhotoUrl);
+                if (!$('#kt_goods_receipt_invoice_input')[0].files.length) {
+                    formData.delete('invoice_photo');
+                }
+            }
+
             $.ajax({
                 url: hostUrl + "inventory/goods-receipt/store",
                 type: "POST",
@@ -290,6 +522,8 @@ var TKAppInventoryGoodsReceiptForm = function () {
                 success: function(response) {
                     submitButton.removeAttribute('data-kt-indicator');
                     submitButton.disabled = false;
+
+                    stopCompanionPolling();
 
                     Swal.fire({
                         text: response.message || "Nota Penerimaan Barang berhasil disimpan!",
@@ -325,6 +559,9 @@ var TKAppInventoryGoodsReceiptForm = function () {
             handleAddManual();
             handleQuickAddSupplier();
             handleSubmit();
+
+            // Check for existing companion session on page load
+            checkExistingSession();
             
             const formatSupplier = (item) => {
                 if (!item.id) return item.text;

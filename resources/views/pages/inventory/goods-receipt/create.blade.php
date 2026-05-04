@@ -49,16 +49,109 @@
                         <div class="mb-0">
                             <label class="required form-label fw-bold">Foto Nota / Surat Jalan</label>
                             <div class="fv-row">
-                                <div class="dropzone d-flex align-items-center justify-content-center border-dashed border-primary bg-light-primary rounded p-5 cursor-pointer position-relative" id="kt_goods_receipt_invoice_upload" style="min-height: 200px;">
-                                    <input type="file" name="invoice_photo" class="position-absolute opacity-0 w-100 h-100 cursor-pointer" accept="image/*" id="kt_goods_receipt_invoice_input" />
-                                    <div class="text-center" id="kt_goods_receipt_invoice_placeholder">
-                                        <i class="ki-duotone ki-camera fs-3hx text-primary mb-2"><span class="path1"></span><span class="path2"></span></i>
-                                        <div class="fs-6 fw-bold text-gray-800">Ambil Foto</div>
-                                        <div class="text-muted fs-8">Klik di sini</div>
+                                <!-- Hidden file input for gallery pick -->
+                                <input type="file" name="invoice_photo" class="d-none" accept="image/*" id="kt_goods_receipt_invoice_input" />
+
+                                <!-- Option Selector (shown when no photo yet) -->
+                                <div id="kt_goods_receipt_photo_options">
+                                    <div class="d-flex flex-column gap-3">
+                                        <!-- Option 1: Pick from gallery -->
+                                        <div class="d-flex align-items-center gap-3 border border-dashed border-primary rounded p-4 cursor-pointer bg-hover-light-primary transition-all" id="kt_goods_receipt_option_gallery">
+                                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-light-primary" style="width:48px; height:48px; flex-shrink:0;">
+                                                <i class="ki-duotone ki-picture fs-2 text-primary"><span class="path1"></span><span class="path2"></span></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-gray-800 fs-6">Pilih Gambar</div>
+                                                <div class="text-muted fs-8">Dari galeri atau file</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Option 2: Capture from phone -->
+                                        <div class="d-flex align-items-center gap-3 border border-dashed border-success rounded p-4 cursor-pointer bg-hover-light-success transition-all" id="kt_goods_receipt_option_companion">
+                                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-light-success" style="width:48px; height:48px; flex-shrink:0;">
+                                                <i class="ki-duotone ki-phone fs-2 text-success"><span class="path1"></span><span class="path2"></span></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-gray-800 fs-6">Ambil dari HP</div>
+                                                <div class="text-muted fs-8">Scan QR, foto via kamera HP</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="d-none w-100" id="kt_goods_receipt_invoice_preview_container">
+                                </div>
+
+                                <!-- QR Companion Panel (hidden by default) -->
+                                <div class="d-none" id="kt_goods_receipt_companion_panel">
+                                    <div class="text-center border border-dashed border-success rounded p-5 bg-light-success bg-opacity-25 position-relative">
+                                        <!-- Loading state -->
+                                        <div id="companion_qr_loading">
+                                            <div class="spinner-border text-success mb-3" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <div class="text-gray-600 fw-semibold fs-7">Menyiapkan koneksi...</div>
+                                        </div>
+
+                                        <!-- QR Code display -->
+                                        <div class="d-none" id="companion_qr_display">
+                                            <div class="mb-3">
+                                                <div class="d-inline-block bg-white rounded p-3 shadow-sm">
+                                                    <div id="companion_qr_code" style="width:180px; height:180px;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="fw-bold text-gray-800 fs-7 mb-1">Scan QR Code dengan HP</div>
+                                            <div class="text-muted fs-9 mb-3">Buka kamera HP → arahkan ke QR ini</div>
+                                            <div class="d-flex align-items-center justify-content-center gap-2" id="companion_hp_status">
+                                                <span class="badge badge-light-warning fs-9">
+                                                    <i class="ki-duotone ki-time fs-8 me-1"><span class="path1"></span><span class="path2"></span></i>
+                                                    Menunggu HP...
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Cancel button -->
+                                        <button type="button" class="btn btn-sm btn-light-danger mt-4" id="companion_cancel_btn">
+                                            <i class="ki-duotone ki-cross fs-4 me-1"><span class="path1"></span><span class="path2"></span></i>
+                                            Batal
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Companion Connected Panel (shown when HP is already paired) -->
+                                <div class="d-none" id="kt_goods_receipt_companion_connected">
+                                    <div class="text-center border border-dashed border-success rounded p-4 bg-light-success bg-opacity-25">
+                                        <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                                            <span class="bullet bullet-dot bg-success h-8px w-8px animation-blink"></span>
+                                            <span class="fw-bold text-success fs-6">📱 HP Terhubung</span>
+                                        </div>
+                                        <div class="text-muted fs-8 mb-3">Ambil foto nota dari HP Anda.<br>Foto akan otomatis muncul di sini.</div>
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <div class="spinner-border spinner-border-sm text-success" role="status" id="companion_waiting_spinner">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <span class="text-gray-600 fs-8" id="companion_waiting_text">Menunggu foto dari HP...</span>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-sm btn-light-primary me-2" id="companion_switch_gallery_btn">
+                                                <i class="ki-duotone ki-picture fs-4 me-1"><span class="path1"></span><span class="path2"></span></i>
+                                                Pilih Gambar
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light-danger" id="companion_disconnect_btn">
+                                                <i class="ki-duotone ki-cross fs-4 me-1"><span class="path1"></span><span class="path2"></span></i>
+                                                Putuskan
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Photo Preview (hidden by default, shown after photo picked/received) -->
+                                <div class="d-none" id="kt_goods_receipt_invoice_preview_container">
+                                    <div class="position-relative">
                                         <img src="" class="img-fluid rounded shadow-sm w-100 mb-2" id="kt_goods_receipt_invoice_preview" />
-                                        <div class="text-primary fw-bold fs-8 text-center border border-primary border-dashed rounded p-2">Ganti Foto</div>
+                                        <div class="d-flex gap-2 mt-2">
+                                            <button type="button" class="btn btn-sm btn-light-primary flex-fill" id="kt_goods_receipt_change_photo">
+                                                <i class="ki-duotone ki-arrows-loop fs-4 me-1"><span class="path1"></span><span class="path2"></span></i>
+                                                Ganti Foto
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -269,9 +362,12 @@
 }
 .collapsible-active-rotate-180 { transition: transform 0.3s ease; }
 .collapsed .collapsible-active-rotate-180 { transform: rotate(-90deg); }
+.animation-blink { animation: blink-animation 1.5s infinite; }
+@keyframes blink-animation { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 </style>
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('assets/custom/js/pages/inventory/goods-receipt/form.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="{{ asset('assets/custom/js/pages/inventory/goods-receipt/form.js') }}?v={{ time() }}"></script>
 @endpush

@@ -16,6 +16,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Inventory\GoodsReceiptController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\ApiTokenController;
+use App\Http\Controllers\CompanionController;
+use App\Http\Controllers\CompanionUploadController;
+
+// Companion Camera routes (public — phone accesses via QR token, no auth)
+Route::get('/cam/{token}', [CompanionController::class, 'show'])->name('companion.camera');
+Route::post('/companion/upload', [CompanionUploadController::class, 'store'])->name('companion.upload');
+Route::get('/companion/heartbeat/{token}', [CompanionController::class, 'heartbeat'])->name('companion.heartbeat');
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
 Route::get('/auth/sso/redirect', [AuthController::class, 'redirectToERP'])->name('sso.redirect');
@@ -24,6 +31,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'check.access'])->group(function () {
     Route::post('/claim-admin', [\App\Http\Controllers\AdminClaimController::class, 'claim']);
+
+    // Companion Camera (PC-side, authenticated)
+    Route::get('/companion/check-session', [CompanionController::class, 'checkSession'])->name('companion.session.check');
+    Route::post('/companion/session', [CompanionController::class, 'createSession'])->name('companion.session.create');
+    Route::get('/companion/check-photo/{token}', [CompanionController::class, 'checkPhoto'])->name('companion.check-photo');
+    Route::post('/companion/clear-photo/{token}', [CompanionController::class, 'clearPhoto'])->name('companion.clear-photo');
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index']);

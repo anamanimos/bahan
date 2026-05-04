@@ -61,6 +61,29 @@ class GoodsReceiptController extends Controller
             $invoicePath = null;
             if ($request->hasFile('invoice_photo')) {
                 $invoicePath = $request->file('invoice_photo')->store('invoices', 'public');
+            } elseif ($request->companion_photo_url) {
+                // Photo from companion camera — find the session's stored photo path
+                $companionSession = \App\Models\CompanionSession::where('user_id', auth()->id())
+                    ->whereNotNull('photo_path')
+                    ->latest('photo_uploaded_at')
+                    ->first();
+                
+                if ($companionSession && $companionSession->photo_path) {
+                    // Move companion photo to invoices directory
+                    $sourcePath = storage_path('app/public/' . $companionSession->photo_path);
+                    if (file_exists($sourcePath)) {
+                        $newFilename = 'invoices/' . basename($companionSession->photo_path);
+                        $destPath = storage_path('app/public/' . $newFilename);
+                        
+                        $dir = dirname($destPath);
+                        if (!is_dir($dir)) {
+                            mkdir($dir, 0755, true);
+                        }
+                        
+                        rename($sourcePath, $destPath);
+                        $invoicePath = $newFilename;
+                    }
+                }
             }
 
             $goodsReceipt = \App\Models\GoodsReceipt::create([
