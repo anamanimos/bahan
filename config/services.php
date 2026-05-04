@@ -38,8 +38,8 @@ return [
     ],
 
     'damaijaya' => [
-        'url' => env('DAMAIJAYA_API_URL'),
-        'token' => env('DAMAIJAYA_API_TOKEN'),
+        'url' => env('DAMAIJAYA_API_URL', 'https://app.damaijaya.my.id/api/v1'),
+        'token' => env('DAMAIJAYA_API_TOKEN', 'a6067c77b6e8ae671f23f56fe29550a070079f10b2a1097381bf845d8f93c81e'),
     ],
 
 ];

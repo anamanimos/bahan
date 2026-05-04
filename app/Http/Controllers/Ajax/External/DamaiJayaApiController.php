@@ -14,13 +14,19 @@ class DamaiJayaApiController extends Controller
     public function searchOrders(Request $request)
     {
         $search = $request->query('q');
-        $apiUrl = config('services.damaijaya.url') . '/orders';
+        $baseUrl = config('services.damaijaya.url');
+        
+        if (empty($baseUrl)) {
+            return response()->json(['error' => 'DamaiJaya API URL is not configured.'], 500);
+        }
+
+        $apiUrl = rtrim($baseUrl, '/') . '/orders';
         $token = config('services.damaijaya.token');
 
         try {
             $response = Http::withHeaders([
                 'x-api-key' => $token
-            ])->get($apiUrl, [
+            ])->timeout(10)->get($apiUrl, [
                 'search' => $search,
             ]);
 
