@@ -108,7 +108,7 @@ class SaleController extends Controller
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
                     'lot_id' => $item['lot_id'],
-                    'order_reference' => $item['order_reference'] ?? null,
+                    'order_reference' => $item['order_reference'] ?? $sale->order_reference,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $subtotal,
@@ -129,7 +129,7 @@ class SaleController extends Controller
             \App\Services\StockWebhookService::notify('create', 'sale', [
                 'sale_id' => $sale->id,
                 'invoice_number' => $sale->invoice_number,
-                'order_number' => $sale->order_reference, // ERP Order Number
+                'order_reference' => $sale->order_reference, // ERP Order Number
                 'customer' => [
                     'name' => $sale->customer->name,
                     'type' => $sale->customer->type,
@@ -187,6 +187,7 @@ class SaleController extends Controller
             \App\Services\StockWebhookService::notify('delete', 'sale', [
                 'sale_id' => $sale->id,
                 'invoice_number' => $sale->invoice_number,
+                'order_reference' => $sale->order_reference,
                 'customer' => [
                     'name' => $sale->customer->name,
                     'type' => $sale->customer->type,
@@ -214,6 +215,7 @@ class SaleController extends Controller
             \App\Services\StockWebhookService::notify('delete', 'sale', [
                 'sale_id' => $sale->id,
                 'invoice_number' => $sale->invoice_number,
+                'order_reference' => $sale->order_reference,
                 'deleted_at' => now()->toIso8601String()
             ]);
 
