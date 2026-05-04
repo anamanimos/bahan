@@ -173,16 +173,20 @@ class PurchaseRequisitionController extends Controller
                 ]);
             }
 
-            // If all items approved/rejected, update parent status
+            // Update parent PR status based on item statuses
             $totalItems = $requisition->items()->count();
             $approvedCount = $requisition->items()->where('status', 'Approved')->count();
+            $rejectedCount = $requisition->items()->where('status', 'Rejected')->count();
             
             if ($approvedCount === $totalItems) {
                 $requisition->update(['status' => 'Approved']);
             } elseif ($approvedCount > 0) {
                 $requisition->update(['status' => 'Partially Approved']);
-            } else {
+            } elseif ($rejectedCount === $totalItems) {
                 $requisition->update(['status' => 'Rejected']);
+            } else {
+                // If there are still pending items and no approvals, keep it as Submitted or set to Pending
+                $requisition->update(['status' => 'Submitted']);
             }
         });
 

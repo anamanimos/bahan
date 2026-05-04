@@ -198,10 +198,40 @@
             updateMobileBadge({{ $item->id }}, '{{ $item->status }}');
         @endforeach
 
+        // Sync Desktop and Mobile inputs
+        $(document).on('change', 'select[name^="item_status"]', function(e) {
+            if (e.originalEvent === undefined && e.namespace !== 'select2') return; // Prevent infinite loops
+            
+            const name = $(this).attr('name');
+            const val = $(this).val();
+            const itemId = name.match(/\[(\d+)\]/)[1];
+            
+            // Sync other inputs with same name
+            $(`select[name="${name}"]`).not(this).val(val).trigger('change');
+            
+            // Update mobile badge
+            updateMobileBadge(itemId, val);
+        });
+
+        $(document).on('input', 'textarea[name^="item_notes"]', function() {
+            const name = $(this).attr('name');
+            const val = $(this).val();
+            $(`textarea[name="${name}"]`).not(this).val(val);
+        });
+
         $('#kt_pr_verify_form').on('submit', function(e) {
             e.preventDefault();
             const form = $(this);
             const submitBtn = $('#kt_pr_verify_submit');
+
+            // Disable one set of inputs to avoid duplicate names in serialization
+            // We'll keep the ones that are currently visible
+            const isMobile = window.innerWidth < 768;
+            if (isMobile) {
+                $('.d-none.d-md-block').find('select, textarea').attr('disabled', true);
+            } else {
+                $('.d-md-none').find('select, textarea').attr('disabled', true);
+            }
 
             submitBtn.attr('data-kt-indicator', 'on').attr('disabled', true);
 
@@ -210,6 +240,9 @@
                 type: 'POST',
                 data: form.serialize(),
                 success: function(response) {
+                    // Re-enable for next attempt if needed
+                    form.find('select, textarea').attr('disabled', false);
+                    
                     submitBtn.removeAttr('data-kt-indicator').attr('disabled', false);
                     if (response.success) {
                         Swal.fire({
