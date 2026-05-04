@@ -99,6 +99,12 @@ Route::prefix('master')->group(function () {
         Route::post('/store', [\App\Http\Controllers\Master\CategoryController::class, 'store'])->name('master.category.store');
     });
 
+    Route::prefix('colors')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Master\ColorController::class, 'index'])->name('master.color.index');
+        Route::get('/export', [\App\Http\Controllers\Master\ColorController::class, 'exportCsv'])->name('master.color.export');
+        Route::get('/template', [\App\Http\Controllers\Master\ColorController::class, 'downloadTemplate'])->name('master.color.template');
+    });
+
     // AJAX Routes for Master
     Route::prefix('ajax')->group(function () {
         Route::post('/product/list', [\App\Http\Controllers\Ajax\Master\ProductAjaxController::class, 'list'])->name('master.ajax.product.list');
@@ -112,7 +118,12 @@ Route::prefix('master')->group(function () {
         Route::post('/supplier/delete', [\App\Http\Controllers\Ajax\Master\SupplierAjaxController::class, 'destroy'])->name('master.ajax.supplier.delete');
         Route::post('/supplier/merge', [\App\Http\Controllers\Ajax\Master\SupplierAjaxController::class, 'merge'])->name('master.ajax.supplier.merge');
         Route::post('/category/store', [\App\Http\Controllers\Ajax\Master\CategoryAjaxController::class, 'store'])->name('master.ajax.category.store');
+        Route::post('/color/list', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'list'])->name('master.ajax.color.list');
         Route::post('/color/store', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'store'])->name('master.ajax.color.store');
+        Route::post('/color/update/{id}', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'update'])->name('master.ajax.color.update');
+        Route::post('/color/delete', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'destroy'])->name('master.ajax.color.delete');
+        Route::post('/color/import/validate', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'validateImport'])->name('master.ajax.color.import.validate');
+        Route::post('/color/import/confirm', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'confirmImport'])->name('master.ajax.color.import.confirm');
     });
 });
 });

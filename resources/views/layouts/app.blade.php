@@ -19,7 +19,10 @@
     @stack('styles')
     
     <script>
-        var hostUrl = "{{ url('/') }}/";
+        var hostUrl = "{{ url('/') }}";
+        if (!hostUrl.endsWith('/')) {
+            hostUrl += '/';
+        }
     </script>
 </head>
 
@@ -180,6 +183,14 @@
                                             <i class="ki-duotone ki-shop fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span></i>
                                         </span>
                                         <span class="menu-title">Supplier</span>
+                                    </a>
+                                </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('master/colors*') ? 'active' : '' }}" href="{{ url('master/colors') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-color-swatch fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span></i>
+                                        </span>
+                                        <span class="menu-title">Warna</span>
                                     </a>
                                 </div>
                                 @endhasanyrole
