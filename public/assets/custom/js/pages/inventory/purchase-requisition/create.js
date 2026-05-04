@@ -12,6 +12,11 @@ var TKAppPurchaseRequisitionCreate = function () {
         $('#kt_modal_add_product_quick').modal('show');
     };
 
+    window.openQuickAddSupplier = function(btn) {
+        $('select[data-kt-element="item-supplier"]').select2('close');
+        $('#modal_quick_add_supplier').modal('show');
+    };
+
     var initSelect2 = function (element) {
         // Initialize Product Select2
         $(element).find('[data-kt-element="item-name"]').select2({
@@ -61,7 +66,17 @@ var TKAppPurchaseRequisitionCreate = function () {
                 },
                 cache: true
             },
-            minimumInputLength: 1
+            minimumInputLength: 1,
+            language: {
+                noResults: function() {
+                    return `<a href="#" class="btn btn-sm btn-light-primary w-100" onclick="window.openQuickAddSupplier(this)">+ Tambah Toko Baru</a>`;
+                }
+            },
+            escapeMarkup: function (markup) {
+                return markup;
+            }
+        }).on('select2:open', function() {
+            activeSelectElement = this;
         });
 
         // Context type change
@@ -315,11 +330,61 @@ var TKAppPurchaseRequisitionCreate = function () {
         });
     };
 
+    var handleQuickAddSupplier = function() {
+        var form = document.getElementById('form_quick_add_supplier');
+        var submitBtn = document.getElementById('btn_quick_add_supplier_submit');
+
+        if(!form || !submitBtn) return;
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if(!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            submitBtn.setAttribute('data-kt-indicator', 'on');
+            submitBtn.disabled = true;
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: $(form).serialize(),
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                success: function(response) {
+                    submitBtn.removeAttribute('data-kt-indicator');
+                    submitBtn.disabled = false;
+
+                    if(response.success && response.data) {
+                        $('#modal_quick_add_supplier').modal('hide');
+                        form.reset();
+                        
+                        if (activeSelectElement && $(activeSelectElement).attr('data-kt-element') === 'item-supplier') {
+                            var newOption = new Option(response.data.name, response.data.id, true, true);
+                            $(activeSelectElement).append(newOption).trigger('change');
+                        }
+                    } else {
+                        Swal.fire({ text: response.message || "Gagal menyimpan supplier.", icon: "error", buttonsStyling: false, confirmButtonText: "Ok, mengerti!", customClass: { confirmButton: "btn btn-primary" } });
+                    }
+                },
+                error: function(xhr) {
+                    submitBtn.removeAttribute('data-kt-indicator');
+                    submitBtn.disabled = false;
+                    var msg = "Terjadi kesalahan.";
+                    if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                    Swal.fire({ text: msg, icon: "error", buttonsStyling: false, confirmButtonText: "Ok, mengerti!", customClass: { confirmButton: "btn btn-primary" } });
+                }
+            });
+        });
+    };
+
     return {
         init: function () {
             handleRepeater();
             handleFormSubmit();
             handleQuickAddProduct();
+            handleQuickAddSupplier();
         }
     };
 }();

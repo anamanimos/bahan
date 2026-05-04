@@ -213,6 +213,45 @@
     </div>
 </div>
 <!--end::Modal - Add Product Quick-->
+
+<!--begin::Modal - Add Supplier Quick-->
+<div class="modal fade" id="modal_quick_add_supplier" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered mw-500px">
+        <div class="modal-content">
+            <form id="form_quick_add_supplier" class="form" action="{{ route('master.ajax.supplier.store') }}">
+                <div class="modal-header">
+                    <h2 class="fw-bold">Tambah Supplier Baru</h2>
+                    <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+                    </div>
+                </div>
+                <div class="modal-body py-10 px-lg-17">
+                    <div class="fv-row mb-7">
+                        <label class="required fs-6 fw-semibold mb-2">Nama Supplier</label>
+                        <input type="text" class="form-control form-control-solid" name="name" placeholder="Masukkan nama supplier" required />
+                    </div>
+                    <div class="fv-row mb-7">
+                        <label class="fs-6 fw-semibold mb-2">Nomor Telepon</label>
+                        <input type="text" class="form-control form-control-solid" name="phone_number" placeholder="Contoh: 08123456789" />
+                    </div>
+                    <div class="fv-row mb-7">
+                        <label class="fs-6 fw-semibold mb-2">Alamat</label>
+                        <textarea class="form-control form-control-solid" name="address" rows="3" placeholder="Alamat lengkap supplier"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer flex-center">
+                    <button type="reset" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" id="btn_quick_add_supplier_submit" class="btn btn-primary">
+                        <span class="indicator-label">Simpan Supplier</span>
+                        <span class="indicator-progress">Mohon tunggu... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--end::Modal - Add Supplier Quick-->
+
 @endsection
 
 @push('styles')
