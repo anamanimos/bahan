@@ -126,7 +126,7 @@ class GoodsReceiptController extends Controller
                 if ($orderRef) {
                     if (!isset($salesByOrder[$orderRef])) {
                         $datePrefix = date('Ymd');
-                        $lastSale = \App\Models\Sale::where('invoice_number', 'like', "INV-{$datePrefix}-%")->orderBy('invoice_number', 'desc')->first();
+                        $lastSale = \App\Models\Sale::withTrashed()->where('invoice_number', 'like', "INV-{$datePrefix}-%")->orderBy('invoice_number', 'desc')->first();
                         $nextNumber = $lastSale ? ((int) substr($lastSale->invoice_number, -4)) + 1 : 1;
                         $saleInvoice = "INV-{$datePrefix}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 

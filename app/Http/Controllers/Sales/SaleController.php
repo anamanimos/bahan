@@ -74,7 +74,7 @@ class SaleController extends Controller
 
             // Generate Invoice Number
             $datePrefix = date('Ymd', strtotime($request->sale_date));
-            $lastSale = Sale::where('invoice_number', 'like', "INV-{$datePrefix}-%")->orderBy('invoice_number', 'desc')->first();
+            $lastSale = Sale::withTrashed()->where('invoice_number', 'like', "INV-{$datePrefix}-%")->orderBy('invoice_number', 'desc')->first();
             $nextNumber = 1;
             if ($lastSale) {
                 $lastNumber = (int) substr($lastSale->invoice_number, -4);
