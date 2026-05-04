@@ -17,7 +17,14 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $colors = \App\Models\Color::all();
-        return view('pages.master.product.index', compact('categories', 'colors'));
+        
+        $stats = [
+            'total' => Product::count(),
+            'categories' => $categories->count(),
+            'inactive' => Product::where('is_active', false)->count(),
+        ];
+
+        return view('pages.master.product.index', compact('categories', 'colors', 'stats'));
     }
 
     /**
@@ -36,8 +43,14 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'sku' => 'nullable|unique:products,sku',
-            'name' => 'required|unique:products,name',
+            'sku' => [
+                'nullable',
+                \Illuminate\Validation\Rule::unique('products')->whereNull('deleted_at')
+            ],
+            'name' => [
+                'required',
+                \Illuminate\Validation\Rule::unique('products')->whereNull('deleted_at')
+            ],
             'category_id' => 'required|exists:categories,id',
             'base_unit' => 'required',
             'minimum_stock_level' => 'nullable|numeric',
@@ -64,6 +77,12 @@ class ProductController extends Controller
             $data['specifications']['tags'] = explode(',', $request->tags);
         }
 
+        // Handle Image Upload
+        if ($request->hasFile('product_image')) {
+            $path = $request->file('product_image')->store('products', 'public');
+            $data['image_path'] = $path;
+        }
+
         $product = Product::create($data);
         
         if ($request->ajax()) {
@@ -81,6 +100,7 @@ class ProductController extends Controller
         return redirect()->route('master.product.index')
             ->with('success', 'Produk berhasil ditambahkan.');
     }
+
     /**
      * Show the form for editing the specified product.
      */
@@ -100,11 +120,18 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $request->validate([
-            'sku' => 'nullable|unique:products,sku,' . $id,
-            'name' => 'required|unique:products,name,' . $id,
+            'sku' => [
+                'nullable',
+                \Illuminate\Validation\Rule::unique('products')->ignore($id)->whereNull('deleted_at')
+            ],
+            'name' => [
+                'required',
+                \Illuminate\Validation\Rule::unique('products')->ignore($id)->whereNull('deleted_at')
+            ],
             'category_id' => 'required|exists:categories,id',
             'base_unit' => 'required',
             'minimum_stock_level' => 'nullable|numeric',
+            'product_image' => 'nullable|image|max:2048'
         ]);
 
         $data = $request->all();
@@ -121,6 +148,16 @@ class ProductController extends Controller
         // Handle tags (if any)
         if ($request->tags) {
             $data['specifications']['tags'] = is_array($request->tags) ? $request->tags : explode(',', $request->tags);
+        }
+
+        // Handle Image Upload
+        if ($request->hasFile('product_image')) {
+            // Delete old image if exists
+            if ($product->image_path && \Storage::disk('public')->exists($product->image_path)) {
+                \Storage::disk('public')->delete($product->image_path);
+            }
+            $path = $request->file('product_image')->store('products', 'public');
+            $data['image_path'] = $path;
         }
 
         $product->update($data);

@@ -16,6 +16,7 @@ class GoodsReceiptItem extends Model
         'received_quantity',
         'unit',
         'unit_price',
+        'order_reference',
         'lot_identifier',
         'notes'
     ];
@@ -39,5 +40,13 @@ class GoodsReceiptItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the lots created for this item.
+     */
+    public function lots(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Lot::class);
     }
 }

@@ -3,18 +3,13 @@
 var TKAppMasterProductList = function () {
     var table;
     var datatable;
+    var mobileContainer;
+    var mobilePagination;
 
     var initDataTable = function () {
-        if (typeof DataTable !== 'undefined' && DataTable.isDataTable(table)) {
-            new DataTable(table).destroy();
-        }
+        if (!table) return;
 
-        if (typeof DataTable === 'undefined') {
-            console.error('DataTable is not defined! Please check if plugins.bundle.js is loaded correctly.');
-            return;
-        }
-
-        datatable = new DataTable(table, {
+        datatable = $(table).DataTable({
             searchDelay: 500,
             processing: true,
             serverSide: true,
@@ -29,9 +24,14 @@ var TKAppMasterProductList = function () {
                         colors: $('#filter_colors').val(),
                     };
                 },
+                dataSrc: function(json) {
+                    renderMobileCards(json.data);
+                    renderMobilePagination(json);
+                    return json.data;
+                },
                 error: function (xhr, error, thrown) {
                     console.error('AJAX Error:', error, thrown);
-                    $(table).find('tbody').html(`<tr><td colspan="7" class="text-center py-10"><div class="text-danger fw-bold">Gagal menghubungi server (HTTP ${xhr.status}).</div></td></tr>`);
+                    $(table).find('tbody').html(`<tr><td colspan="8" class="text-center py-10"><div class="text-danger fw-bold">Gagal menghubungi server (HTTP ${xhr.status}).</div></td></tr>`);
                 }
             },
             language: {
@@ -733,9 +733,175 @@ var TKAppMasterProductList = function () {
         });
     };
 
+    var renderMobileCards = function(data) {
+        if (!mobileContainer) return;
+        
+        mobileContainer.empty();
+        
+        if (data.length === 0) {
+            mobileContainer.append('<div class="text-center py-10 text-muted fs-7">Tidak ada data produk.</div>');
+            return;
+        }
+
+        data.forEach(function(item) {
+            const hex = item.color_hex || '#e4e6ef';
+            const colorBullet = item.color && item.color !== '-' ? `<span class="bullet bullet-dot w-10px h-10px me-1" style="background-color: ${hex}"></span> ${item.color}` : '-';
+            
+            var card = `
+                <div class="p-5 border-bottom border-gray-200 bg-white">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex flex-column">
+                            <a href="${hostUrl}master/product/edit/${item.id}" class="text-gray-900 fw-bold text-hover-primary fs-6">${item.name}</a>
+                            <span class="text-muted fs-8">${item.sku || 'No SKU'}</span>
+                        </div>
+                        <span class="badge badge-light-secondary fw-bold fs-8">${item.base_unit}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex flex-column">
+                            <span class="text-gray-600 fs-7 fw-semibold">${item.category_name}</span>
+                            <div class="d-flex align-items-center mt-1 fs-8 text-gray-500">
+                                ${colorBullet}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-gray-900 fs-6 fw-bold">${item.stock} ${item.base_unit}</div>
+                            <div class="mt-1">
+                                <a href="${hostUrl}master/product/edit/${item.id}" class="btn btn-sm btn-icon btn-light-primary w-30px h-30px me-1" title="Edit">
+                                    <i class="ki-duotone ki-pencil fs-5"><span class="path1"></span><span class="path2"></span></i>
+                                </a>
+                                <button class="btn btn-sm btn-icon btn-light-danger w-30px h-30px" data-kt-product-filter="delete_row_mobile" data-id="${item.id}" data-name="${item.name}" title="Hapus">
+                                    <i class="ki-duotone ki-trash fs-5"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            mobileContainer.append(card);
+        });
+
+        // Handle delete on mobile
+        mobileContainer.find('[data-kt-product-filter="delete_row_mobile"]').on('click', function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            handleDeleteRow(id, name);
+        });
+    };
+
+    var renderMobilePagination = function(json) {
+        if (!mobilePagination) return;
+        mobilePagination.empty();
+
+        var pageInfo = datatable.page.info();
+        var totalPages = pageInfo.pages;
+        var currentPage = pageInfo.page;
+
+        if (totalPages <= 1) return;
+
+        var pagination = `<ul class="pagination pagination-outline">`;
+        
+        // Prev
+        pagination += `<li class="page-item previous ${currentPage === 0 ? 'disabled' : ''}">
+            <a href="#" class="page-link" data-page="${currentPage - 1}"><i class="ki-duotone ki-left fs-2"></i></a>
+        </li>`;
+
+        // Pages (limited)
+        for (var i = 0; i < totalPages; i++) {
+            if (i === 0 || i === totalPages - 1 || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                pagination += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a href="#" class="page-link" data-page="${i}">${i + 1}</a>
+                </li>`;
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                pagination += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+
+        // Next
+        pagination += `<li class="page-item next ${currentPage === totalPages - 1 ? 'disabled' : ''}">
+            <a href="#" class="page-link" data-page="${currentPage + 1}"><i class="ki-duotone ki-right fs-2"></i></a>
+        </li>`;
+
+        pagination += `</ul>`;
+        mobilePagination.append(pagination);
+
+        mobilePagination.find('.page-link').on('click', function(e) {
+            e.preventDefault();
+            var page = $(this).data('page');
+            if (page !== undefined && page >= 0 && page < totalPages) {
+                datatable.page(page).draw('page');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    };
+
+    var handleDeleteRow = (id, productName) => {
+        Swal.fire({
+            text: "Apakah Anda yakin ingin menghapus " + productName + "?",
+            icon: "warning",
+            showCancelButton: true,
+            buttonsStyling: false,
+            confirmButtonText: "Ya, hapus!",
+            cancelButtonText: "Tidak, batalkan",
+            customClass: {
+                confirmButton: "btn fw-bold btn-danger",
+                cancelButton: "btn fw-bold btn-active-light-primary"
+            }
+        }).then(function (result) {
+            if (result.value) {
+                Swal.fire({
+                    text: "Sedang menghapus produk...",
+                    icon: "info",
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: hostUrl + "master/ajax/product/delete",
+                    type: "POST",
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    data: { id: id },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                text: "Anda telah menghapus " + productName + "!.",
+                                icon: "success",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok, mengerti!",
+                                customClass: { confirmButton: "btn fw-bold btn-primary" }
+                            }).then(function () {
+                                datatable.draw();
+                            });
+                        } else {
+                            Swal.fire({
+                                text: response.message,
+                                icon: "error",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok, mengerti!",
+                                customClass: { confirmButton: "btn fw-bold btn-primary" }
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            text: "Terjadi kesalahan saat menghapus produk.",
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, mengerti!",
+                            customClass: { confirmButton: "btn fw-bold btn-primary" }
+                        });
+                    }
+                });
+            }
+        });
+    };
+
     return {
         init: function () {
             table = document.querySelector('#kt_products_table');
+            mobileContainer = $('#kt_products_mobile_container');
+            mobilePagination = $('#kt_products_mobile_pagination');
             
             if (!table) {
                 console.error('Table #kt_products_table not found!');

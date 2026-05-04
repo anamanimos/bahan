@@ -17,7 +17,8 @@ class GoodsReceipt extends Model
         'supplier_id',
         'invoice_number',
         'invoice_photo_path',
-        'purchase_requisition_id'
+        'purchase_requisition_id',
+        'order_reference'
     ];
 
     protected $casts = [

@@ -306,16 +306,16 @@ var TKAppInventoryGoodsReceiptForm = function () {
                             template.find('[data-kt-element="order-ref"]').text(item.order_reference || '-');
                             template.find('[data-kt-element="qty-purchase-requisition"]').text(item.requested_quantity);
                             template.find('[data-kt-element="unit"]').text(item.unit);
-                            template.find('input[name="quantity[]"]').val(item.requested_quantity);
-                            template.find('input[name="price[]"]').val(item.estimated_unit_price);
-                            
+                            template.find('[data-kt-element="input-quantity"]').attr('name', 'quantity[]').val(item.requested_quantity);
+                            template.find('[data-kt-element="input-price"]').attr('name', 'price[]').val(item.estimated_unit_price);
+                            template.find('[data-kt-element="input-notes"]').attr('name', 'notes[]').val('');
+
                             template.find('[data-kt-element="product-display"]').removeClass('d-none');
                             template.find('[data-kt-element="product-select-container"]').addClass('d-none');
                             template.find('[data-kt-element="qty-purchase-requisition-container"]').removeClass('d-none');
                             
-                            template.find('select[name="product_id[]"]').prop('disabled', true);
-                            
                             template.append(`<input type="hidden" name="product_id[]" value="${item.product_id}">`);
+                            template.append(`<input type="hidden" name="order_reference[]" value="${item.order_reference || ''}">`);
                             template.append(`<input type="hidden" name="item_purchase_requisition_item_id[]" value="${item.id}">`);
                             
                             template.find('input[name="quantity[]"], input[name="price[]"]').on('input', updateTotalCount);
@@ -363,8 +363,7 @@ var TKAppInventoryGoodsReceiptForm = function () {
             
             template.find('[data-kt-element="product-col"]').removeClass('col-md-3').addClass('col-md-5');
             
-            const productSelect = template.find('select[name="product_id[]"]');
-            productSelect.select2({
+            template.find('[data-kt-element="product-select"]').attr('name', 'product_id[]').select2({
                 placeholder: "Cari Bahan...",
                 ajax: {
                     url: hostUrl + "inventory/ajax/goods-receipt/search-products",
@@ -375,6 +374,11 @@ var TKAppInventoryGoodsReceiptForm = function () {
                 }
             });
 
+            template.find('[data-kt-element="context-type"]').attr('name', 'context_type[]');
+            template.find('[data-kt-element="input-quantity"]').attr('name', 'quantity[]').val('');
+            template.find('[data-kt-element="input-price"]').attr('name', 'price[]').val('');
+            template.find('[data-kt-element="input-notes"]').attr('name', 'notes[]').val('');
+
             const contextSelect = template.find('[data-kt-element="context-type"]');
             const orderContainer = template.find('[data-kt-element="order-container"]');
             const orderSelect = template.find('[data-kt-element="order-select"]');
@@ -384,20 +388,23 @@ var TKAppInventoryGoodsReceiptForm = function () {
                 if (val === 'Order') {
                     orderContainer.removeClass('d-none');
                     if (!orderSelect.hasClass("select2-hidden-accessible")) {
-                        orderSelect.select2({
+                        orderSelect.attr('name', 'order_reference[]').select2({
                             width: '100%',
                             placeholder: "Pilih Order...",
                             ajax: {
-                                url: hostUrl + "ajax/sales/orders/search",
+                                url: orderSelect.data('ajax-url'),
                                 dataType: 'json',
                                 delay: 250,
                                 data: params => ({ q: params.term }),
                                 processResults: data => ({ results: data.results })
                             }
+                        }).on('select2:select', function(e) {
+                            template.find('[data-kt-element="order-ref"]').text(e.params.data.text);
                         });
                     }
                 } else {
                     orderContainer.addClass('d-none');
+                    orderSelect.removeAttr('name');
                 }
             });
 
@@ -497,6 +504,29 @@ var TKAppInventoryGoodsReceiptForm = function () {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Validate all quantities are > 0 (only for visible items)
+            let valid = true;
+            $('#kt_goods_receipt_items_container .goods-receipt-item:not(.d-none) input[name="quantity[]"]').each(function() {
+                const val = parseFloat($(this).val());
+                if (isNaN(val) || val <= 0) {
+                    valid = false;
+                    $(this).addClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+
+            if (!valid) {
+                Swal.fire({
+                    text: "Mohon pastikan semua jumlah barang telah diisi dengan benar (minimal 0.01).",
+                    icon: "warning",
+                    buttonsStyling: false,
+                    confirmButtonText: "Ok, saya perbaiki",
+                    customClass: { confirmButton: "btn btn-primary" }
+                });
+                return;
+            }
+
             submitButton.setAttribute('data-kt-indicator', 'on');
             submitButton.disabled = true;
 

@@ -19,7 +19,7 @@ class PurchaseRequisitionAjaxController extends Controller
         $length = $request->get('length');
         $search = $request->get('search')['value'] ?? '';
 
-        $query = PurchaseRequisition::withCount('items');
+        $query = PurchaseRequisition::with(['items']);
 
         if ($search) {
             $query->where('identifier', 'like', "%{$search}%");
@@ -33,13 +33,18 @@ class PurchaseRequisitionAjaxController extends Controller
             ->limit($length)
             ->get()
             ->map(function($pr) {
+                $total = $pr->items->sum(function($item) {
+                    return $item->requested_quantity * $item->estimated_unit_price;
+                });
+
                 return [
                     'id' => $pr->identifier,
                     'date' => $pr->created_at->format('Y-m-d'),
-                    'staff_name' => 'Admin Gudang', // Future: $pr->user->name
-                    'items_count' => $pr->items_count,
-                    'total_estimation' => 0, // Future: Calculate from items
-                    'status' => $pr->status ?? 'Approved',
+                    'staff_name' => 'Admin Gudang',
+                    'items_count' => $pr->items->count(),
+                    'total_estimation' => $total,
+                    'status' => $pr->status ?? 'Submitted',
+                    'can_verify' => auth()->user()->hasRole('admin') && $pr->status === 'Submitted',
                 ];
             });
 

@@ -14,7 +14,7 @@ class PurchaseRequisitionController extends Controller
     public function index()
     {
         $stats = [
-            'pending' => \App\Models\PurchaseRequisition::where('status', 'Pending')->count(),
+            'pending' => \App\Models\PurchaseRequisition::where('status', 'Submitted')->count(),
             'approved' => \App\Models\PurchaseRequisition::where('status', 'Approved')->count(),
             'spend' => \DB::table('purchase_requisition_items')
                 ->join('purchase_requisitions', 'purchase_requisitions.id', '=', 'purchase_requisition_items.purchase_requisition_id')
@@ -79,7 +79,7 @@ class PurchaseRequisitionController extends Controller
             $pr = PurchaseRequisition::create([
                 'identifier' => $identifier,
                 'created_by_user_id' => auth()->id() ?? 1,
-                'status' => 'Pending',
+                'status' => 'Submitted',
                 'notes' => $request->input('notes'),
             ]);
 
@@ -104,7 +104,7 @@ class PurchaseRequisitionController extends Controller
                     'requested_quantity' => $quantities[$index] ?? 0,
                     'unit' => $product ? $product->base_unit : 'Pcs',
                     'estimated_unit_price' => $price,
-                    'context' => $contextTypes[$index] ?? 'Stok',
+                    'context' => $contextTypes[$index] ?? 'Stock',
                     'erp_order_reference' => $orderRefs[$index] ?? null,
                     'status' => 'Pending',
                 ]);
@@ -130,7 +130,62 @@ class PurchaseRequisitionController extends Controller
      */
     public function show($id)
     {
-        $requisition = PurchaseRequisition::with(['items.product', 'items.supplier'])->findOrFail($id);
+        $requisition = PurchaseRequisition::with(['items.product', 'items.supplier'])
+            ->where('identifier', $id)
+            ->firstOrFail();
         return view('pages.inventory.purchase-requisition.show', compact('requisition'));
+    }
+
+    /**
+     * Show verification page for the purchase requisition.
+     */
+    public function verify($id)
+    {
+        $requisition = PurchaseRequisition::with(['items.product', 'items.supplier'])
+            ->where('identifier', $id)
+            ->firstOrFail();
+            
+        return view('pages.inventory.purchase-requisition.verify', compact('requisition'));
+    }
+
+    /**
+     * Update status of PR and its items.
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $requisition = PurchaseRequisition::where('identifier', $id)->firstOrFail();
+        
+        if (!auth()->user()->hasRole('admin')) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses.'], 403);
+        }
+
+        \DB::transaction(function() use ($request, $requisition) {
+            $itemStatuses = $request->input('item_status', []);
+            $itemNotes = $request->input('item_notes', []);
+            
+            foreach ($requisition->items as $item) {
+                $status = $itemStatuses[$item->id] ?? 'Pending';
+                $notes = $itemNotes[$item->id] ?? $item->notes;
+                
+                $item->update([
+                    'status' => $status,
+                    'notes' => $notes
+                ]);
+            }
+
+            // If all items approved/rejected, update parent status
+            $totalItems = $requisition->items()->count();
+            $approvedCount = $requisition->items()->where('status', 'Approved')->count();
+            
+            if ($approvedCount === $totalItems) {
+                $requisition->update(['status' => 'Approved']);
+            } elseif ($approvedCount > 0) {
+                $requisition->update(['status' => 'Partially Approved']);
+            } else {
+                $requisition->update(['status' => 'Rejected']);
+            }
+        });
+
+        return response()->json(['success' => true, 'message' => 'Verifikasi berhasil disimpan.']);
     }
 }

@@ -106,7 +106,7 @@ class GoodsReceiptAjaxController extends Controller
             return response()->json(['message' => 'Purchase Requisition not found'], 404);
         }
 
-        $items = $pr->items->map(function($item) {
+        $items = $pr->items->where('status', 'Approved')->map(function($item) {
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
@@ -116,7 +116,7 @@ class GoodsReceiptAjaxController extends Controller
                 'unit' => $item->unit,
                 'estimated_unit_price' => $item->estimated_unit_price,
             ];
-        });
+        })->values();
 
         return response()->json([
             'identifier' => $pr->identifier,

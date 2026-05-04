@@ -58,8 +58,8 @@
 
     <!--begin::Col (Table/Cards)-->
     <div class="col-xl-9">
-        <div class="card card-flush border-0 shadow-sm">
-            <div class="card-header align-items-center py-5 gap-2 gap-md-5 px-5 px-md-9">
+        <div class="card card-flush border-0 shadow-sm card-mobile-full">
+            <div class="card-header align-items-center py-5 gap-2 gap-md-5 px-5 px-md-9 sticky-top-mobile">
                 <div class="card-title w-100 w-md-auto">
                     <div class="d-flex align-items-center position-relative my-1 w-100">
                         <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-4"><span class="path1"></span><span class="path2"></span></i>
@@ -86,8 +86,9 @@
                                 <div>
                                     <select class="form-select form-select-solid" id="filter_status" data-placeholder="Pilih Status" data-allow-clear="true" multiple="multiple">
                                         <option value="Draft">Draft</option>
-                                        <option value="Menunggu Review">Menunggu Review</option>
-                                        <option value="Sudah Review">Sudah Review</option>
+                                        <option value="Submitted">Submitted</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
                                     </select>
                                 </div>
                             </div>
@@ -105,7 +106,7 @@
 
             <div class="px-5 px-md-10 pb-5 d-flex flex-wrap gap-2 d-none" id="active-filters-container"></div>
 
-            <div class="card-body pt-0 px-0 px-md-9">
+            <div class="card-body pt-0 px-0 px-md-9 card-body-mobile-full">
                 <div class="d-none d-md-block overflow-hidden">
                     <table class="table align-middle table-row-dashed fs-6 gy-2 w-100" id="kt_inventory_pr_table">
                         <thead>
@@ -141,6 +142,36 @@
 .resize-handle { position: absolute; top: 0; right: 0; width: 5px; cursor: col-col-resize; user-select: none; height: 100%; z-index: 10; }
 .resize-handle:hover, .resize-handle.resizing { background: rgba(0, 158, 247, 0.5); }
 body.resizing { cursor: col-resize !important; }
+
+@media (max-width: 767.98px) {
+    .sticky-top-mobile {
+        position: sticky !important;
+        top: -1px;
+        z-index: 100;
+        background: #fff;
+        border-radius: 0 !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
+        margin-left: -1rem !important;
+        margin-right: -1rem !important;
+        width: calc(100% + 2rem) !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    .card-mobile-full {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+    .card-body-mobile-full {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    #kt_inventory_pr_mobile_container {
+        margin-left: -1rem;
+        margin-right: -1rem;
+    }
+}
 </style>
 @endpush
 

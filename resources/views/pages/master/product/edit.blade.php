@@ -45,7 +45,37 @@
                         </div>
                     </div>
                 </div>
-                <!--end::General options-->
+                <!--begin::Media-->
+                <div class="card card-flush py-4">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <h2>Galeri Foto Produk</h2>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="fv-row mb-2">
+                            <div class="d-flex flex-wrap gap-5" id="kt_ecommerce_add_product_media_items">
+                                @if($product->image_path)
+                                    <div class="position-relative w-125px h-125px">
+                                        <img src="{{ asset('storage/' . $product->image_path) }}" class="w-100 h-100 object-fit-cover rounded border" alt="Product Image" />
+                                        <div class="position-absolute top-0 end-0 m-n2">
+                                            <button type="button" class="btn btn-icon btn-circle btn-danger w-20px h-20px shadow" title="Hapus" onclick="$(this).parent().parent().remove()">
+                                                <i class="ki-duotone ki-cross fs-9"><span class="path1"></span><span class="path2"></span></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                <label class="btn btn-outline btn-outline-dashed btn-outline-default d-flex flex-column flex-center w-125px h-125px" style="cursor:pointer">
+                                    <i class="ki-duotone ki-plus fs-2tx text-primary mb-2"></i>
+                                    <span class="fs-7 fw-bold text-gray-400">Tambah Foto</span>
+                                    <input type="file" name="product_image" accept=".png, .jpg, .jpeg" class="d-none" id="kt_ecommerce_add_product_media_input" />
+                                </label>
+                            </div>
+                        </div>
+                        <div class="text-muted fs-7 mt-2">Format file: .png, .jpg, .jpeg. Maksimal 2MB.</div>
+                    </div>
+                </div>
+                <!--end::Media-->
 
                 <!--begin::Inventory Info-->
                 <div class="card card-flush py-4">

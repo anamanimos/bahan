@@ -70,15 +70,32 @@ var TKAppPurchaseRequisitionCreate = function () {
         }).on('change', function() {
             var val = $(this).val();
             var orderContainer = $(element).find('[data-kt-element="order-container"]');
-            var orderInput = $(element).find('[data-kt-element="order-ref"]');
+            var orderSelect = $(element).find('[data-kt-element="order-ref"]');
             if(val === 'Order') {
                 orderContainer.removeClass('d-none');
-                orderInput.attr('required', true);
+                orderSelect.attr('required', true);
             } else {
                 orderContainer.addClass('d-none');
-                orderInput.removeAttr('required');
-                orderInput.val('');
+                orderSelect.removeAttr('required');
+                orderSelect.val(null).trigger('change');
             }
+        });
+
+        // Initialize Order Select2
+        $(element).find('[data-kt-element="order-ref"]').select2({
+            ajax: {
+                url: $(element).find('[data-kt-element="order-ref"]').data('ajax-url'),
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return { results: data.results };
+                },
+                cache: true
+            },
+            minimumInputLength: 1
         });
     };
 
@@ -135,7 +152,7 @@ var TKAppPurchaseRequisitionCreate = function () {
             });
             
             // Re-add options for context_type
-            $(newItem).find('[data-kt-element="context-type"]').html('<option value="Stok">Stok</option><option value="Order">Order</option>');
+            $(newItem).find('[data-kt-element="context-type"]').html('<option value="Stock">Stok</option><option value="Order">Order</option>');
             $(newItem).find('[data-kt-element="order-container"]').addClass('d-none');
             $(newItem).find('[data-kt-element="order-ref"]').removeAttr('required');
 

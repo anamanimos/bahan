@@ -117,6 +117,14 @@ class ProductAjaxController extends Controller
             $id = $request->get('id');
             $product = Product::findOrFail($id);
             $product->delete();
+            
+            // Trigger Webhook for deletion
+            \App\Services\StockWebhookService::notify('delete', 'product', [
+                'product_id' => $id,
+                'sku' => $product->sku,
+                'name' => $product->name,
+                'deleted_at' => now()->toIso8601String()
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -162,6 +170,13 @@ class ProductAjaxController extends Controller
             Product::whereIn('id', $sourceIds)->delete();
 
             \DB::commit();
+
+            // Trigger Webhook for merge
+            \App\Services\StockWebhookService::notify('merge', 'product', [
+                'target_id' => $targetId,
+                'source_ids' => $sourceIds,
+                'timestamp' => now()->toIso8601String()
+            ]);
 
             return response()->json([
                 'success' => true,

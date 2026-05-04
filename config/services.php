@@ -34,6 +34,12 @@ return [
     'erp' => [
         'uuid' => env('ERP_SSO_UUID'),
         'url' => env('ERP_SSO_URL'),
+        'webhook_url' => env('ERP_WEBHOOK_URL'),
+    ],
+
+    'damaijaya' => [
+        'url' => env('DAMAIJAYA_API_URL'),
+        'token' => env('DAMAIJAYA_API_TOKEN'),
     ],
 
 ];

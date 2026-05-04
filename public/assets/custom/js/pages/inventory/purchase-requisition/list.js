@@ -67,7 +67,9 @@ var TKAppInventoryPurchaseRequisitionList = function () {
                     render: function (data) {
                         let color = 'primary';
                         if (data === 'Approved') color = 'success';
-                        if (data === 'Pending') color = 'warning';
+                        if (data === 'Submitted') color = 'warning';
+                        if (data === 'Rejected') color = 'danger';
+                        if (data === 'Partially Approved') color = 'info';
                         return `<span class="badge badge-light-${color} fw-bold">${data}</span>`;
                     }
                 },
@@ -77,12 +79,17 @@ var TKAppInventoryPurchaseRequisitionList = function () {
                     orderable: false,
                     className: 'text-end',
                     render: function (data, type, row) {
+                        let verifyBtn = '';
+                        if (row.can_verify && row.status === 'Submitted') {
+                            verifyBtn = `<div class="menu-item px-3"><a href="${hostUrl}inventory/purchase-requisition/verify/${row.id}" class="menu-link px-3 text-success">Verifikasi</a></div>`;
+                        }
                         return `
                             <a href="#" class="btn btn-sm btn-light btn-active-light-primary btn-flex btn-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                                 Aksi <i class="ki-duotone ki-down fs-5 ms-1"></i>
                             </a>
                             <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4" data-kt-menu="true">
                                 <div class="menu-item px-3"><a href="${hostUrl}inventory/purchase-requisition/${row.id}" class="menu-link px-3">Detail</a></div>
+                                ${verifyBtn}
                                 <div class="menu-item px-3"><a href="#" class="menu-link px-3 text-danger">Hapus</a></div>
                             </div>`;
                     },
@@ -94,6 +101,16 @@ var TKAppInventoryPurchaseRequisitionList = function () {
             KTMenu.createInstances();
             renderMobileCards();
         });
+
+    };
+
+    var getStatusColor = function(status) {
+        let color = 'primary';
+        if (status === 'Approved') color = 'success';
+        if (status === 'Submitted') color = 'warning';
+        if (status === 'Rejected') color = 'danger';
+        if (status === 'Partially Approved') color = 'info';
+        return color;
     };
 
     var renderMobileCards = function () {
@@ -105,17 +122,27 @@ var TKAppInventoryPurchaseRequisitionList = function () {
             return;
         }
         data.each(function (row, index) {
+            let verifyBtn = '';
+            if (row.can_verify && row.status === 'Submitted') {
+                verifyBtn = `<a href="${hostUrl}inventory/purchase-requisition/verify/${row.id}" class="btn btn-sm btn-light-success py-1 px-3 fs-8">Verifikasi</a>`;
+            }
+
             const card = `
                 <div class="card card-flush border-bottom rounded-0">
                     <div class="card-body p-5">
                         <div class="d-flex flex-stack mb-2">
                             <span class="text-gray-800 fw-bold fs-6">${row.id}</span>
-                            <span class="badge badge-light-primary fw-bold">${row.status}</span>
+                            <span class="badge badge-light-${getStatusColor(row.status)} fw-bold">${row.status}</span>
                         </div>
                         <div class="fs-7 text-muted mb-4">${row.date} • ${row.staff_name}</div>
-                        <div class="d-flex flex-stack">
+                        <div class="d-flex flex-stack mb-5">
                             <div class="fs-7 fw-bold text-gray-700">${row.items_count} Items</div>
                             <div class="fs-6 fw-bold text-success">Rp ${parseFloat(row.total_estimation).toLocaleString('id-ID')}</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="${hostUrl}inventory/purchase-requisition/${row.id}" class="btn btn-sm btn-light-primary py-1 px-3 fs-8">Detail</a>
+                            ${verifyBtn}
+                            <a href="#" class="btn btn-sm btn-light-danger py-1 px-3 fs-8">Hapus</a>
                         </div>
                     </div>
                 </div>`;

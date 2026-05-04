@@ -74,12 +74,14 @@
                                         <div class="mt-2 row g-2">
                                             <div class="col-4">
                                                 <select class="form-select form-select-solid fs-7" name="context_type[]" data-kt-element="context-type" data-control="select2" data-hide-search="true">
-                                                    <option value="Stok">Stok</option>
+                                                    <option value="Stock">Stok</option>
                                                     <option value="Order">Order</option>
                                                 </select>
                                             </div>
                                             <div class="col-8 d-none" data-kt-element="order-container">
-                                                <input type="text" class="form-control form-control-solid fs-7" name="order_reference[]" placeholder="Referensi MO/Order" data-kt-element="order-ref" />
+                                                <select class="form-select form-select-solid fs-7" name="order_reference[]" data-placeholder="Pilih Order..." data-kt-element="order-ref" data-ajax-url="{{ route('inventory.ajax.purchase-requisition.search-orders') }}">
+                                                    <option></option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>

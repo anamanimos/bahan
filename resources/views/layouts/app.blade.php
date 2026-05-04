@@ -141,6 +141,14 @@
                                     </div>
                                 </div>
                                 <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('pos*') ? 'active' : '' }}" href="{{ url('pos') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-screen fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+                                        </span>
+                                        <span class="menu-title">POS (Kasir)</span>
+                                    </a>
+                                </div>
+                                <div class="menu-item">
                                     <a class="menu-link {{ request()->is('inventory/purchase-requisition*') ? 'active' : '' }}" href="{{ url('inventory/purchase-requisition') }}">
                                         <span class="menu-icon">
                                             <i class="ki-duotone ki-notepad fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span></i>
@@ -162,6 +170,14 @@
                                             <i class="ki-duotone ki-chart-line-star fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
                                         </span>
                                         <span class="menu-title">Stok</span>
+                                    </a>
+                                </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('sales*') ? 'active' : '' }}" href="{{ url('sales') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-handcart fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span></i>
+                                        </span>
+                                        <span class="menu-title">Penjualan</span>
                                     </a>
                                 </div>
                                 <div class="menu-item pt-5">
@@ -193,6 +209,14 @@
                                         <span class="menu-title">Warna</span>
                                     </a>
                                 </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('master/customer*') ? 'active' : '' }}" href="{{ url('master/customer') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-user-tick fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                                        </span>
+                                        <span class="menu-title">Pelanggan</span>
+                                    </a>
+                                </div>
                                 @endhasanyrole
 
                                 @role('admin')
@@ -210,11 +234,19 @@
                                     </a>
                                 </div>
                                 <div class="menu-item">
-                                    <a class="menu-link {{ request()->is('admin/api*') ? 'active' : '' }}" href="{{ url('admin/api') }}">
+                                    <a class="menu-link {{ request()->is('admin/api*') ? 'active' : '' }}" href="{{ url('admin/api/token') }}">
                                         <span class="menu-icon">
                                             <i class="ki-duotone ki-key fs-2"><span class="path1"></span><span class="path2"></span></i>
                                         </span>
                                         <span class="menu-title">API</span>
+                                    </a>
+                                </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('admin/webhook*') ? 'active' : '' }}" href="{{ route('admin.webhook.index') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-wifi fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+                                        </span>
+                                        <span class="menu-title">Webhook</span>
                                     </a>
                                 </div>
                                 @endrole

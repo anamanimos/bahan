@@ -173,7 +173,7 @@
                             <div class="w-200px d-none d-md-block">
                                 <select class="form-select form-select-solid form-select-sm" id="kt_goods_receipt_add_by_purchase_requisition" data-control="select2" data-placeholder="Tarik dari PR...">
                                     <option></option>
-                                    @foreach(\App\Models\PurchaseRequisition::where('status', 'Approved')->orderBy('identifier', 'desc')->get() as $pr)
+                                    @foreach(\App\Models\PurchaseRequisition::whereIn('status', ['Approved', 'Partially Approved'])->orderBy('identifier', 'desc')->get() as $pr)
                                         <option value="{{ $pr->identifier }}">{{ $pr->identifier }}</option>
                                     @endforeach
                                 </select>
@@ -188,7 +188,7 @@
                         <div class="d-md-none mb-5">
                             <select class="form-select form-select-solid" id="kt_goods_receipt_add_by_purchase_requisition_mobile" data-control="select2" data-placeholder="Tarik dari PR...">
                                 <option></option>
-                                @foreach(\App\Models\PurchaseRequisition::where('status', 'Approved')->orderBy('identifier', 'desc')->get() as $pr)
+                                @foreach(\App\Models\PurchaseRequisition::whereIn('status', ['Approved', 'Partially Approved'])->orderBy('identifier', 'desc')->get() as $pr)
                                     <option value="{{ $pr->identifier }}">{{ $pr->identifier }}</option>
                                 @endforeach
                             </select>
@@ -227,18 +227,18 @@
                                                     <div class="text-muted fs-9">Ref: <span data-kt-element="order-ref">-</span></div>
                                                 </div>
                                                 <div class="d-none" data-kt-element="product-select-container">
-                                                    <select class="form-select form-select-solid mb-2" name="product_id[]" data-placeholder="Cari Bahan...">
+                                                    <select class="form-select form-select-solid mb-2" data-placeholder="Cari Bahan..." data-kt-element="product-select">
                                                         <option></option>
                                                     </select>
                                                     <div class="row g-2">
                                                         <div class="col-4">
-                                                            <select class="form-select form-select-solid fs-9 px-3" name="context_type[]" data-kt-element="context-type">
+                                                            <select class="form-select form-select-solid fs-9 px-3" data-kt-element="context-type">
                                                                 <option value="Stok">Stok</option>
                                                                 <option value="Order">Order</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-8 d-none" data-kt-element="order-container">
-                                                            <select class="form-select form-select-solid fs-9" name="order_id[]" data-placeholder="Pilih Order..." data-kt-element="order-select">
+                                                            <select class="form-select form-select-solid fs-9" data-placeholder="Pilih Order..." data-kt-element="order-select" data-ajax-url="{{ route('inventory.ajax.purchase-requisition.search-orders') }}">
                                                                 <option></option>
                                                             </select>
                                                         </div>
@@ -254,22 +254,22 @@
                                             
                                             <div class="col-6 col-md-1" data-kt-element="qty-receive-col">
                                                 <label class="form-label fw-bold fs-8 text-primary mb-1">Jml</label>
-                                                <input type="number" class="form-control form-control-solid px-3" name="quantity[]" value="0" />
+                                                <input type="number" class="form-control form-control-solid px-3" placeholder="0.00" step="0.01" data-kt-element="input-quantity" />
                                             </div>
-
+ 
                                             <!-- Col Price -->
                                             <div class="col-6 col-md-2" data-kt-element="price-col">
                                                 <label class="form-label fw-bold fs-8 text-success mb-1">Harga Satuan</label>
                                                 <div class="input-group input-group-solid">
                                                     <span class="input-group-text fs-9 px-2">Rp</span>
-                                                    <input type="number" class="form-control form-control-solid ps-2" name="price[]" value="0" placeholder="0" />
+                                                    <input type="number" class="form-control form-control-solid ps-2" placeholder="0" data-kt-element="input-price" />
                                                 </div>
                                             </div>
-
+ 
                                             <!-- Col Notes -->
                                             <div class="col-12 col-md-4" data-kt-element="notes-col">
                                                 <label class="form-label fw-bold fs-8 text-gray-700 mb-1">Catatan / Keterangan</label>
-                                                <textarea class="form-control form-control-solid fs-8" name="notes[]" rows="1" placeholder="Tulis keterangan di sini..."></textarea>
+                                                <textarea class="form-control form-control-solid fs-8" rows="1" placeholder="Tulis keterangan di sini..." data-kt-element="input-notes"></textarea>
                                             </div>
                                         </div>
                                     </div>
