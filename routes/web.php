@@ -55,6 +55,7 @@ Route::middleware(['auth', 'check.access'])->group(function () {
             Route::put('/update/{webhook}', [\App\Http\Controllers\Admin\WebhookController::class, 'update'])->name('admin.webhook.update');
             Route::delete('/delete/{webhook}', [\App\Http\Controllers\Admin\WebhookController::class, 'destroy'])->name('admin.webhook.destroy');
             Route::get('/documentation', [\App\Http\Controllers\Admin\WebhookController::class, 'documentation'])->name('admin.webhook.documentation');
+            Route::get('/download-markdown', [\App\Http\Controllers\Admin\WebhookController::class, 'downloadMarkdown'])->name('admin.webhook.download-markdown');
         });
     });
 
