@@ -14,23 +14,51 @@ class CategoryController extends Controller
      *      operationId="getCategoryList",
      *      tags={"Products"},
      *      summary="Get list of categories",
-     *      description="Returns list of categories",
+     *      description="Returns list of categories with search and pagination",
+     *      @OA\Parameter(
+     *          name="search",
+     *          description="Search term (by name)",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="string")
+     *      ),
+     *      @OA\Parameter(
+     *          name="per_page",
+     *          description="Number of items per page (default: 15)",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="integer")
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
      *          @OA\JsonContent(
-     *              type="array",
-     *              @OA\Items(
-     *                  @OA\Property(property="id", type="integer", example=1),
-     *                  @OA\Property(property="name", type="string", example="Kain")
+     *              type="object",
+     *              @OA\Property(property="current_page", type="integer", example=1),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(property="id", type="integer", example=1),
+     *                      @OA\Property(property="name", type="string", example="Kain")
+     *                  )
      *              )
      *          )
      *       )
      *     )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::select('id', 'name')->get();
+        $query = Category::query();
+
+        if ($request->has('search') && $request->search != '') {
+            $searchTerm = $request->search;
+            $query->where('name', 'like', "%{$searchTerm}%");
+        }
+
+        $perPage = $request->input('per_page', 15);
+        $categories = $query->select('id', 'name')->paginate($perPage);
+
         return response()->json($categories);
     }
 

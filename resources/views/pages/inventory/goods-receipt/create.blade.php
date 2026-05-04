@@ -38,9 +38,10 @@
                             <label class="required form-label fw-bold">Supplier / Pengirim</label>
                             <select class="form-select form-select-solid" name="supplier_id" id="goods_receipt_supplier_id" data-control="select2" data-placeholder="Pilih Supplier...">
                                 <option></option>
-                                <option value="1">Toko Subur Makmur</option>
-                                <option value="2">CV. Tekstil Jaya</option>
-                                <option value="3">PT. Bahan Utama</option>
+                                <option value="add_new" data-kt-select2-template="add_new">+ Tambah Toko Baru</option>
+                                @foreach(\App\Models\Supplier::orderBy('name', 'asc')->get() as $supplier)
+                                    <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -79,8 +80,9 @@
                             <div class="w-200px d-none d-md-block">
                                 <select class="form-select form-select-solid form-select-sm" id="kt_goods_receipt_add_by_purchase_requisition" data-control="select2" data-placeholder="Tarik dari PR...">
                                     <option></option>
-                                    <option value="PR-20260501-001">PR-20260501-001</option>
-                                    <option value="PR-20260430-008">PR-20260430-008</option>
+                                    @foreach(\App\Models\PurchaseRequisition::where('status', 'Approved')->orderBy('identifier', 'desc')->get() as $pr)
+                                        <option value="{{ $pr->identifier }}">{{ $pr->identifier }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <button type="button" class="btn btn-light-primary btn-sm" id="kt_goods_receipt_add_manual">
@@ -93,8 +95,9 @@
                         <div class="d-md-none mb-5">
                             <select class="form-select form-select-solid" id="kt_goods_receipt_add_by_purchase_requisition_mobile" data-control="select2" data-placeholder="Tarik dari PR...">
                                 <option></option>
-                                <option value="PR-20260501-001">PR-20260501-001</option>
-                                <option value="PR-20260430-008">PR-20260430-008</option>
+                                @foreach(\App\Models\PurchaseRequisition::where('status', 'Approved')->orderBy('identifier', 'desc')->get() as $pr)
+                                    <option value="{{ $pr->identifier }}">{{ $pr->identifier }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -213,6 +216,43 @@
         <!--end::Sticky Footer-->
     </form>
     <!--end::Form-->
+</div>
+
+<!-- Modal: Quick Add Supplier -->
+<div class="modal fade" id="modal_quick_add_supplier" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered mw-500px">
+        <div class="modal-content">
+            <form id="form_quick_add_supplier" class="form">
+                <div class="modal-header">
+                    <h2 class="fw-bold">Tambah Supplier Baru</h2>
+                    <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+                    </div>
+                </div>
+                <div class="modal-body py-10 px-lg-17">
+                    <div class="fv-row mb-7">
+                        <label class="required fs-6 fw-semibold mb-2">Nama Supplier</label>
+                        <input type="text" class="form-control form-control-solid" name="name" placeholder="Masukkan nama supplier" required />
+                    </div>
+                    <div class="fv-row mb-7">
+                        <label class="fs-6 fw-semibold mb-2">Nomor Telepon</label>
+                        <input type="text" class="form-control form-control-solid" name="phone_number" placeholder="Contoh: 08123456789" />
+                    </div>
+                    <div class="fv-row mb-7">
+                        <label class="fs-6 fw-semibold mb-2">Alamat</label>
+                        <textarea class="form-control form-control-solid" name="address" rows="3" placeholder="Alamat lengkap supplier"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer flex-center">
+                    <button type="reset" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" id="btn_quick_add_supplier_submit" class="btn btn-primary">
+                        <span class="indicator-label">Simpan Supplier</span>
+                        <span class="indicator-progress">Mohon tunggu... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
 

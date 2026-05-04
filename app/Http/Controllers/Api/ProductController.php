@@ -33,6 +33,13 @@ class ProductController extends Controller
      *          @OA\Schema(type="string")
      *      ),
      *      @OA\Parameter(
+     *          name="category_id",
+     *          description="Filter by category ID",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Parameter(
      *          name="per_page",
      *          description="Number of items per page (default: 15)",
      *          required=false,
@@ -67,6 +74,10 @@ class ProductController extends Controller
                 $q->where('name', 'like', "%{$searchTerm}%")
                   ->orWhere('sku', 'like', "%{$searchTerm}%");
             });
+        }
+
+        if ($request->has('category_id') && $request->category_id != '') {
+            $query->where('category_id', $request->category_id);
         }
 
         $perPage = $request->input('per_page', 15);

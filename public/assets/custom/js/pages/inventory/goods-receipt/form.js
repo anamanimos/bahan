@@ -79,8 +79,16 @@ var TKAppInventoryGoodsReceiptForm = function () {
                             template.find('input[name="quantity[]"]').val(item.requested_quantity);
                             template.find('input[name="price[]"]').val(item.estimated_unit_price);
                             
+                            // Ensure display is shown and select is hidden for PR items
+                            template.find('[data-kt-element="product-display"]').removeClass('d-none');
+                            template.find('[data-kt-element="product-select-container"]').addClass('d-none');
+                            template.find('[data-kt-element="qty-purchase-requisition-container"]').removeClass('d-none');
+                            
+                            // Set value and disable select for PR items to ensure only the hidden input is sent
+                            template.find('select[name="product_id[]"]').prop('disabled', true);
+                            
                             // Hidden fields for submission
-                            template.append(`<input type="hidden" name="item_product_id[]" value="${item.product_id}">`);
+                            template.append(`<input type="hidden" name="product_id[]" value="${item.product_id}">`);
                             template.append(`<input type="hidden" name="item_purchase_requisition_item_id[]" value="${item.id}">`);
                             
                             template.find('input[name="quantity[]"], input[name="price[]"]').on('input', updateTotalCount);
@@ -204,6 +212,63 @@ var TKAppInventoryGoodsReceiptForm = function () {
         }
     };
 
+    var handleQuickAddSupplier = function() {
+        const modal = $('#modal_quick_add_supplier');
+        const form = document.querySelector('#form_quick_add_supplier');
+        const submitButton = document.querySelector('#btn_quick_add_supplier_submit');
+        const supplierSelect = $('#goods_receipt_supplier_id');
+
+        if (!form) return;
+
+        // Detect selection of "Add New"
+        supplierSelect.on('change', function() {
+            if ($(this).val() === 'add_new') {
+                $(this).val(null).trigger('change'); // Reset selection
+                modal.modal('show');
+            }
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            submitButton.setAttribute('data-kt-indicator', 'on');
+            submitButton.disabled = true;
+
+            $.ajax({
+                url: hostUrl + "master/ajax/supplier/store",
+                type: "POST",
+                data: $(form).serialize(),
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                success: function(response) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    if (response.success) {
+                        const newOption = new Option(response.data.name, response.data.id, true, true);
+                        supplierSelect.append(newOption).trigger('change');
+                        
+                        modal.modal('hide');
+                        form.reset();
+
+                        Swal.fire({
+                            text: "Supplier baru berhasil ditambahkan!",
+                            icon: "success",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok",
+                            customClass: { confirmButton: "btn btn-primary" }
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+                    const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Gagal menambahkan supplier.";
+                    Swal.fire({ text: errorMsg, icon: "error", buttonsStyling: false, confirmButtonText: "Ok", customClass: { confirmButton: "btn btn-primary" } });
+                }
+            });
+        });
+    };
+
     var handleSubmit = function() {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -258,9 +323,22 @@ var TKAppInventoryGoodsReceiptForm = function () {
             initFlatpickr();
             handleAddByPurchaseRequisition();
             handleAddManual();
+            handleQuickAddSupplier();
             handleSubmit();
             
-            $('#kt_goods_receipt_add_by_purchase_requisition, #goods_receipt_supplier_id').select2();
+            const formatSupplier = (item) => {
+                if (!item.id) return item.text;
+                if (item.element && item.element.getAttribute('data-kt-select2-template') === 'add_new') {
+                    return $(`<span class="text-primary fw-bold"><i class="ki-duotone ki-plus fs-4 me-2 text-primary"></i>${item.text}</span>`);
+                }
+                return item.text;
+            };
+
+            $('#kt_goods_receipt_add_by_purchase_requisition').select2();
+            $('#goods_receipt_supplier_id').select2({
+                templateResult: formatSupplier,
+                templateSelection: formatSupplier
+            });
         }
     };
 }();

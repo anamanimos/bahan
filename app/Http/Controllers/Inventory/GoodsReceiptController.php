@@ -72,7 +72,7 @@ class GoodsReceiptController extends Controller
             ]);
 
             foreach ($request->quantity as $index => $qty) {
-                $productId = $request->item_product_id[$index] ?? $request->product_id[$index];
+                $productId = $request->product_id[$index];
                 $price = $request->price[$index];
                 $notes = $request->notes[$index] ?? null;
 
