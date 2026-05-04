@@ -147,6 +147,7 @@ class GoodsReceiptController extends Controller
                         'sale_id' => $sale->id,
                         'product_id' => $productId,
                         'lot_id' => $lot->id,
+                        'order_reference' => $orderRef,
                         'quantity' => $qty,
                         'unit_price' => $price,
                         'subtotal' => $qty * $price,
@@ -187,7 +188,7 @@ class GoodsReceiptController extends Controller
             \App\Services\StockWebhookService::notify('create', 'purchase', [
                 'goods_receipt_id' => $goodsReceipt->id,
                 'identifier' => $goodsReceipt->identifier,
-                'order_number' => $goodsReceipt->order_reference, // ERP Order Number
+                'order_reference' => $goodsReceipt->order_reference, // ERP Order Number
                 'supplier' => $goodsReceipt->supplier->name,
                 'items' => $webhookItems
             ]);
@@ -198,7 +199,7 @@ class GoodsReceiptController extends Controller
                 \App\Services\StockWebhookService::notify('create', 'sale', [
                     'sale_id' => $sale->id,
                     'invoice_number' => $sale->invoice_number,
-                    'order_number' => $sale->order_reference, // ERP Order Number
+                    'order_reference' => $sale->order_reference, // ERP Order Number
                     'customer' => [
                         'name' => $sale->customer->name,
                         'type' => $sale->customer->type,

@@ -215,9 +215,12 @@
                                     </button>
                                 </div>
                                 
-                                <!-- Body: Collapsible content -->
-                                <div class="collapse show" data-kt-element="collapse-content">
-                                    <div class="p-5">
+                                <!-- Hidden Inputs -->
+                                <input type="hidden" data-kt-element="input-product-id" name="product_id[]" value="" />
+                                <input type="hidden" data-kt-element="input-order-reference" name="order_reference[]" value="" />
+                                <input type="hidden" data-kt-element="input-pr-item-id" name="item_purchase_requisition_item_id[]" value="" />
+
+                                <div class="p-5">
                                         <div class="row g-5 align-items-start">
                                             <!-- Col Barang -->
                                             <div class="col-12 col-md-3" data-kt-element="product-col">

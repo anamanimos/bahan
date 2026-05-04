@@ -314,9 +314,9 @@ var TKAppInventoryGoodsReceiptForm = function () {
                             template.find('[data-kt-element="product-select-container"]').addClass('d-none');
                             template.find('[data-kt-element="qty-purchase-requisition-container"]').removeClass('d-none');
                             
-                            template.append(`<input type="hidden" name="product_id[]" value="${item.product_id}">`);
-                            template.append(`<input type="hidden" name="order_reference[]" value="${item.order_reference || ''}">`);
-                            template.append(`<input type="hidden" name="item_purchase_requisition_item_id[]" value="${item.id}">`);
+                            template.find('[data-kt-element="input-product-id"]').val(item.product_id);
+                            template.find('[data-kt-element="input-order-reference"]').val(item.order_reference || '');
+                            template.find('[data-kt-element="input-pr-item-id"]').val(item.id);
                             
                             template.find('input[name="quantity[]"], input[name="price[]"]').on('input', updateTotalCount);
 
@@ -363,7 +363,7 @@ var TKAppInventoryGoodsReceiptForm = function () {
             
             template.find('[data-kt-element="product-col"]').removeClass('col-md-3').addClass('col-md-5');
             
-            template.find('[data-kt-element="product-select"]').attr('name', 'product_id[]').select2({
+            template.find('[data-kt-element="product-select"]').select2({
                 placeholder: "Cari Bahan...",
                 ajax: {
                     url: hostUrl + "inventory/ajax/goods-receipt/search-products",
@@ -372,6 +372,8 @@ var TKAppInventoryGoodsReceiptForm = function () {
                     data: params => ({ q: params.term }),
                     processResults: data => ({ results: data.results })
                 }
+            }).on('select2:select', function(e) {
+                template.find('[data-kt-element="input-product-id"]').val(e.params.data.id);
             });
 
             template.find('[data-kt-element="context-type"]').attr('name', 'context_type[]');
@@ -388,7 +390,7 @@ var TKAppInventoryGoodsReceiptForm = function () {
                 if (val === 'Order') {
                     orderContainer.removeClass('d-none');
                     if (!orderSelect.hasClass("select2-hidden-accessible")) {
-                        orderSelect.attr('name', 'order_reference[]').select2({
+                        orderSelect.select2({
                             width: '100%',
                             placeholder: "Pilih Order...",
                             ajax: {
@@ -400,11 +402,12 @@ var TKAppInventoryGoodsReceiptForm = function () {
                             }
                         }).on('select2:select', function(e) {
                             template.find('[data-kt-element="order-ref"]').text(e.params.data.text);
+                            template.find('[data-kt-element="input-order-reference"]').val(e.params.data.id); // ID is the order_number
                         });
                     }
                 } else {
                     orderContainer.addClass('d-none');
-                    orderSelect.removeAttr('name');
+                    template.find('[data-kt-element="input-order-reference"]').val('');
                 }
             });
 
