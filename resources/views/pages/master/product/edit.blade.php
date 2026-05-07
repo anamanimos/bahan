@@ -88,10 +88,11 @@
                         <div class="row g-9">
                             <div class="col-md-4 fv-row">
                                 <label class="required form-label">Satuan Utama</label>
-                                <select class="form-select" data-control="select2" name="base_unit" required>
+                                <select class="form-select" data-control="select2" name="base_unit" id="base_unit_select" required>
                                     @foreach($units as $unit)
                                         <option value="{{ $unit->symbol }}" {{ $product->base_unit == $unit->symbol ? 'selected' : '' }}>{{ $unit->name }} ({{ $unit->symbol }})</option>
                                     @endforeach
+                                    <option value="ADD_NEW_UNIT" class="fw-bold text-primary">-- Tambah Satuan Baru --</option>
                                 </select>
                             </div>
                             <div class="col-md-4 fv-row">
@@ -202,8 +203,14 @@
         <!--end::Aside column-->
     </div>
 </form>
+@include('pages.master.unit.quick_add_modal')
 @endsection
 
 @push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initQuickAddUnit('#base_unit_select');
+    });
+</script>
 <script src="{{ asset('assets/custom/js/pages/master/product/form.js') }}?v={{ time() }}"></script>
 @endpush

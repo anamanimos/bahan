@@ -392,6 +392,9 @@ var TKAppInventoryGoodsReceiptForm = function () {
             template.find('[data-kt-element="unit-select"]').attr('name', 'unit[]').on('change', function() {
                 template.find('[data-kt-element="input-unit"]').val($(this).val());
             }).trigger('change');
+            
+            // Initialize quick add unit for this row
+            initQuickAddUnit(template.find('[data-kt-element="unit-select"]'));
 
             const contextSelect = template.find('[data-kt-element="context-type"]');
             const orderContainer = template.find('[data-kt-element="order-container"]');

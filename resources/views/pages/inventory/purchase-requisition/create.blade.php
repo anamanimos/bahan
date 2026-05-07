@@ -192,10 +192,12 @@
                     </div>
                     <div class="mb-5">
                         <label class="required form-label">Satuan Dasar</label>
-                        <select class="form-select form-select-solid" name="base_unit" required>
+                        <select class="form-select form-select-solid" name="base_unit" id="quick_product_unit_select" required>
+                            <option></option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->symbol }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
                             @endforeach
+                            <option value="ADD_NEW_UNIT" class="fw-bold text-primary">-- Tambah Satuan Baru --</option>
                         </select>
                     </div>
                 </form>
@@ -250,6 +252,7 @@
 </div>
 <!--end::Modal - Add Supplier Quick-->
 
+@include('pages.master.unit.quick_add_modal')
 @endsection
 
 @push('styles')
@@ -271,5 +274,10 @@
 @endpush
 
 @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initQuickAddUnit('#quick_product_unit_select');
+        });
+    </script>
     <script src="{{ asset('assets/custom/js/pages/inventory/purchase-requisition/create.js') }}?v={{ time() }}"></script>
 @endpush

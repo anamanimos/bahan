@@ -267,6 +267,7 @@
                                                     @foreach($units as $unit)
                                                         <option value="{{ $unit->symbol }}">{{ $unit->symbol }}</option>
                                                     @endforeach
+                                                    <option value="ADD_NEW_UNIT" class="fw-bold text-primary">+ Baru</option>
                                                 </select>
                                             </div>
  
@@ -360,6 +361,7 @@
         </div>
     </div>
 </div>
+@include('pages.master.unit.quick_add_modal')
 @endsection
 
 @push('styles')
