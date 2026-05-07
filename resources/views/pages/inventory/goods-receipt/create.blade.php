@@ -219,6 +219,7 @@
                                 <input type="hidden" data-kt-element="input-product-id" value="" />
                                 <input type="hidden" data-kt-element="input-order-reference" value="" />
                                 <input type="hidden" data-kt-element="input-pr-item-id" value="" />
+                                <input type="hidden" data-kt-element="input-unit" value="" />
 
                                 <div class="p-5">
                                         <div class="row g-5 align-items-start">
@@ -258,6 +259,15 @@
                                             <div class="col-6 col-md-1" data-kt-element="qty-receive-col">
                                                 <label class="form-label fw-bold fs-8 text-primary mb-1">Jml</label>
                                                 <input type="number" class="form-control form-control-solid px-3" placeholder="0.00" step="0.01" data-kt-element="input-quantity" />
+                                            </div>
+ 
+                                            <div class="col-6 col-md-1 d-none" data-kt-element="unit-col">
+                                                <label class="form-label fw-bold fs-8 text-gray-700 mb-1">Satuan</label>
+                                                <select class="form-select form-select-solid px-2 fs-9" data-kt-element="unit-select">
+                                                    @foreach($units as $unit)
+                                                        <option value="{{ $unit->symbol }}">{{ $unit->symbol }}</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
  
                                             <!-- Col Price -->

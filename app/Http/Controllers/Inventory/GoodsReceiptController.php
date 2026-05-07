@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Unit;
 
 class GoodsReceiptController extends Controller
 {
@@ -34,7 +35,8 @@ class GoodsReceiptController extends Controller
      */
     public function create()
     {
-        return view('pages.inventory.goods-receipt.create');
+        $units = Unit::all();
+        return view('pages.inventory.goods-receipt.create', compact('units'));
     }
 
     /**
@@ -101,7 +103,7 @@ class GoodsReceiptController extends Controller
                 $item = $goodsReceipt->items()->create([
                     'product_id' => $productId,
                     'received_quantity' => $qty,
-                    'unit' => 'Mtr', 
+                    'unit' => $request->unit[$index] ?? 'Mtr', 
                     'unit_price' => $price,
                     'order_reference' => $orderRef,
                     'notes' => $notes,

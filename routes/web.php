@@ -135,6 +135,10 @@ Route::middleware(['auth', 'check.access'])->group(function () {
             Route::get('/template', [\App\Http\Controllers\Master\ColorController::class, 'downloadTemplate'])->name('master.color.template');
         });
 
+        Route::prefix('units')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Master\UnitController::class, 'index'])->name('master.unit.index');
+        });
+
         Route::prefix('customer')->group(function () {
             Route::get('/', [\App\Http\Controllers\Master\CustomerController::class, 'index'])->name('master.customer.index');
             Route::get('/create', [\App\Http\Controllers\Master\CustomerController::class, 'create'])->name('master.customer.create');
@@ -163,6 +167,11 @@ Route::middleware(['auth', 'check.access'])->group(function () {
             Route::post('/color/delete', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'destroy'])->name('master.ajax.color.delete');
             Route::post('/color/import/validate', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'validateImport'])->name('master.ajax.color.import.validate');
             Route::post('/color/import/confirm', [\App\Http\Controllers\Ajax\Master\ColorAjaxController::class, 'confirmImport'])->name('master.ajax.color.import.confirm');
+            
+            Route::post('/unit/list', [\App\Http\Controllers\Ajax\Master\UnitAjaxController::class, 'list'])->name('master.ajax.unit.list');
+            Route::post('/unit/store', [\App\Http\Controllers\Ajax\Master\UnitAjaxController::class, 'store'])->name('master.ajax.unit.store');
+            Route::post('/unit/update/{id}', [\App\Http\Controllers\Ajax\Master\UnitAjaxController::class, 'update'])->name('master.ajax.unit.update');
+            Route::post('/unit/delete', [\App\Http\Controllers\Ajax\Master\UnitAjaxController::class, 'destroy'])->name('master.ajax.unit.delete');
         });
     });
 

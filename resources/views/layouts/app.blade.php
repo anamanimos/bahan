@@ -210,6 +210,14 @@
                                     </a>
                                 </div>
                                 <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('master/units*') ? 'active' : '' }}" href="{{ url('master/units') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-delivery-2 fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span></i>
+                                        </span>
+                                        <span class="menu-title">Satuan</span>
+                                    </a>
+                                </div>
+                                <div class="menu-item">
                                     <a class="menu-link {{ request()->is('master/customer*') ? 'active' : '' }}" href="{{ url('master/customer') }}">
                                         <span class="menu-icon">
                                             <i class="ki-duotone ki-user-tick fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>

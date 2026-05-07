@@ -317,6 +317,7 @@ var TKAppInventoryGoodsReceiptForm = function () {
                             template.find('[data-kt-element="input-product-id"]').attr('name', 'product_id[]').val(item.product_id);
                             template.find('[data-kt-element="input-order-reference"]').attr('name', 'order_reference[]').val(item.order_reference || '');
                             template.find('[data-kt-element="input-pr-item-id"]').attr('name', 'item_purchase_requisition_item_id[]').val(item.id);
+                            template.find('[data-kt-element="input-unit"]').attr('name', 'unit[]').val(item.unit);
                             
                             template.find('input[name="quantity[]"], input[name="price[]"]').on('input', updateTotalCount);
 
@@ -384,6 +385,13 @@ var TKAppInventoryGoodsReceiptForm = function () {
             template.find('[data-kt-element="input-quantity"]').attr('name', 'quantity[]').val('');
             template.find('[data-kt-element="input-price"]').attr('name', 'price[]').val('');
             template.find('[data-kt-element="input-notes"]').attr('name', 'notes[]').val('');
+            
+            // Show unit select for manual items
+            template.find('[data-kt-element="unit-col"]').removeClass('d-none');
+            template.find('[data-kt-element="product-col"]').removeClass('col-md-5').addClass('col-md-4');
+            template.find('[data-kt-element="unit-select"]').attr('name', 'unit[]').on('change', function() {
+                template.find('[data-kt-element="input-unit"]').val($(this).val());
+            }).trigger('change');
 
             const contextSelect = template.find('[data-kt-element="context-type"]');
             const orderContainer = template.find('[data-kt-element="order-container"]');

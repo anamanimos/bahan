@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Color;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -17,6 +18,7 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $colors = \App\Models\Color::all();
+        $units = Unit::all();
         
         $stats = [
             'total' => Product::count(),
@@ -24,7 +26,7 @@ class ProductController extends Controller
             'inactive' => Product::where('is_active', false)->count(),
         ];
 
-        return view('pages.master.product.index', compact('categories', 'colors', 'stats'));
+        return view('pages.master.product.index', compact('categories', 'colors', 'units', 'stats'));
     }
 
     /**
@@ -34,7 +36,8 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $colors = \App\Models\Color::all();
-        return view('pages.master.product.create', compact('categories', 'colors'));
+        $units = Unit::all();
+        return view('pages.master.product.create', compact('categories', 'colors', 'units'));
     }
 
     /**
@@ -109,7 +112,8 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $categories = Category::all();
         $colors = \App\Models\Color::all();
-        return view('pages.master.product.edit', compact('product', 'categories', 'colors'));
+        $units = Unit::all();
+        return view('pages.master.product.edit', compact('product', 'categories', 'colors', 'units'));
     }
 
     /**

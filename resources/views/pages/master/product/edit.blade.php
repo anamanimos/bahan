@@ -89,10 +89,9 @@
                             <div class="col-md-4 fv-row">
                                 <label class="required form-label">Satuan Utama</label>
                                 <select class="form-select" data-control="select2" name="base_unit" required>
-                                    <option value="m" {{ $product->base_unit == 'm' ? 'selected' : '' }}>Meter (m)</option>
-                                    <option value="roll" {{ $product->base_unit == 'roll' ? 'selected' : '' }}>Roll</option>
-                                    <option value="kg" {{ $product->base_unit == 'kg' ? 'selected' : '' }}>Kg</option>
-                                    <option value="pcs" {{ $product->base_unit == 'pcs' ? 'selected' : '' }}>Pcs</option>
+                                    @foreach($units as $unit)
+                                        <option value="{{ $unit->symbol }}" {{ $product->base_unit == $unit->symbol ? 'selected' : '' }}>{{ $unit->name }} ({{ $unit->symbol }})</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-md-4 fv-row">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseRequisition;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 
 class PurchaseRequisitionController extends Controller
@@ -43,7 +44,8 @@ class PurchaseRequisitionController extends Controller
     public function create()
     {
         $categories = \App\Models\Category::all();
-        return view('pages.inventory.purchase-requisition.create', compact('categories'));
+        $units = Unit::all();
+        return view('pages.inventory.purchase-requisition.create', compact('categories', 'units'));
     }
 
     /**

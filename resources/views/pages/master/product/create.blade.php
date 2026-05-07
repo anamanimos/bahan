@@ -80,10 +80,9 @@
                             <div class="col-md-4 fv-row">
                                 <label class="required form-label">Satuan Utama</label>
                                 <select class="form-select" data-control="select2" name="base_unit" required>
-                                    <option value="m">Meter (m)</option>
-                                    <option value="roll">Roll</option>
-                                    <option value="kg">Kg</option>
-                                    <option value="pcs">Pcs</option>
+                                    @foreach($units as $unit)
+                                        <option value="{{ $unit->symbol }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-md-4 fv-row">

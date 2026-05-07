@@ -193,11 +193,9 @@
                     <div class="mb-5">
                         <label class="required form-label">Satuan Dasar</label>
                         <select class="form-select form-select-solid" name="base_unit" required>
-                            <option value="Kg">Kg</option>
-                            <option value="Pcs">Pcs</option>
-                            <option value="Roll">Roll</option>
-                            <option value="Meter">Meter</option>
-                            <option value="Pack">Pack</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->symbol }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
+                            @endforeach
                         </select>
                     </div>
                 </form>
