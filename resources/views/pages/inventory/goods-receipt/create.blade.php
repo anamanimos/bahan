@@ -216,9 +216,9 @@
                                 </div>
                                 
                                 <!-- Hidden Inputs -->
-                                <input type="hidden" data-kt-element="input-product-id" name="product_id[]" value="" />
-                                <input type="hidden" data-kt-element="input-order-reference" name="order_reference[]" value="" />
-                                <input type="hidden" data-kt-element="input-pr-item-id" name="item_purchase_requisition_item_id[]" value="" />
+                                <input type="hidden" data-kt-element="input-product-id" value="" />
+                                <input type="hidden" data-kt-element="input-order-reference" value="" />
+                                <input type="hidden" data-kt-element="input-pr-item-id" value="" />
 
                                 <div class="p-5">
                                         <div class="row g-5 align-items-start">

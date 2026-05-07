@@ -314,9 +314,9 @@ var TKAppInventoryGoodsReceiptForm = function () {
                             template.find('[data-kt-element="product-select-container"]').addClass('d-none');
                             template.find('[data-kt-element="qty-purchase-requisition-container"]').removeClass('d-none');
                             
-                            template.find('[data-kt-element="input-product-id"]').val(item.product_id);
-                            template.find('[data-kt-element="input-order-reference"]').val(item.order_reference || '');
-                            template.find('[data-kt-element="input-pr-item-id"]').val(item.id);
+                            template.find('[data-kt-element="input-product-id"]').attr('name', 'product_id[]').val(item.product_id);
+                            template.find('[data-kt-element="input-order-reference"]').attr('name', 'order_reference[]').val(item.order_reference || '');
+                            template.find('[data-kt-element="input-pr-item-id"]').attr('name', 'item_purchase_requisition_item_id[]').val(item.id);
                             
                             template.find('input[name="quantity[]"], input[name="price[]"]').on('input', updateTotalCount);
 
@@ -363,6 +363,10 @@ var TKAppInventoryGoodsReceiptForm = function () {
             
             template.find('[data-kt-element="product-col"]').removeClass('col-md-3').addClass('col-md-5');
             
+            template.find('[data-kt-element="input-product-id"]').attr('name', 'product_id[]').val('');
+            template.find('[data-kt-element="input-order-reference"]').attr('name', 'order_reference[]').val('');
+            template.find('[data-kt-element="input-pr-item-id"]').attr('name', 'item_purchase_requisition_item_id[]').val('');
+
             template.find('[data-kt-element="product-select"]').select2({
                 placeholder: "Cari Bahan...",
                 ajax: {
