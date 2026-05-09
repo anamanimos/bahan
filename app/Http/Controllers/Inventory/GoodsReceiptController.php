@@ -35,7 +35,7 @@ class GoodsReceiptController extends Controller
      */
     public function create()
     {
-        $units = Unit::all();
+        $units = Unit::orderBy('name', 'asc')->get();
         return view('pages.inventory.goods-receipt.create', compact('units'));
     }
 
@@ -103,7 +103,7 @@ class GoodsReceiptController extends Controller
                 $item = $goodsReceipt->items()->create([
                     'product_id' => $productId,
                     'received_quantity' => $qty,
-                    'unit' => $request->unit[$index] ?? 'Mtr', 
+                    'unit' => $request->unit[$index] ?? ($product ? $product->base_unit : 'Pcs'), 
                     'unit_price' => $price,
                     'order_reference' => $orderRef,
                     'notes' => $notes,

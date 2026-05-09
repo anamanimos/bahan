@@ -79,10 +79,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         $(modal).modal('hide');
                         form.reset();
                         
-                        // Add new option to all unit selects if possible, or just the active one
+                        // Add new option to all unit selects on the page
+                        const newOptionText = response.data.name + ' (' + response.data.symbol + ')';
+                        const newOptionValue = response.data.symbol;
+                        
+                        // Select all elements that might be unit selects
+                        const allUnitSelects = $('[data-kt-element="unit-select"], #base_unit_select, #quick_product_unit_select');
+                        
+                        allUnitSelects.each(function() {
+                            // Check if option already exists to avoid duplicates
+                            if ($(this).find(`option[value="${newOptionValue}"]`).length === 0) {
+                                // Insert before the "ADD_NEW_UNIT" option if it exists
+                                const addNewOption = $(this).find('option[value="ADD_NEW_UNIT"]');
+                                const newOpt = new Option(newOptionText, newOptionValue, false, false);
+                                
+                                if (addNewOption.length) {
+                                    $(newOpt).insertBefore(addNewOption);
+                                } else {
+                                    $(this).append(newOpt);
+                                }
+                            }
+                        });
+
+                        // Set the active select to the new value
                         if (activeSelect) {
-                            const newOption = new Option(response.data.name + ' (' + response.data.symbol + ')', response.data.symbol, true, true);
-                            $(activeSelect).append(newOption).trigger('change');
+                            $(activeSelect).val(newOptionValue).trigger('change');
                         }
                         
                         Swal.fire({

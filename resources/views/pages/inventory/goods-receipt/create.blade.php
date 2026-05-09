@@ -253,7 +253,7 @@
                                             <!-- Col Qty -->
                                             <div class="col-6 col-md-2" data-kt-element="qty-purchase-requisition-container">
                                                 <label class="form-label fw-bold fs-8 text-gray-700 mb-1 text-center d-block">Sisa PR</label>
-                                                <div class="fs-7 fw-bold text-gray-600 text-center"><span data-kt-element="qty-purchase-requisition">10</span> <span class="fs-9" data-kt-element="unit">Mtr</span></div>
+                                                <div class="fs-7 fw-bold text-gray-600 text-center"><span data-kt-element="qty-purchase-requisition">-</span> <span class="fs-9" data-kt-element="unit">-</span></div>
                                             </div>
                                             
                                             <div class="col-6 col-md-1" data-kt-element="qty-receive-col">
@@ -265,9 +265,9 @@
                                                 <label class="form-label fw-bold fs-8 text-gray-700 mb-1">Satuan</label>
                                                 <select class="form-select form-select-solid px-2 fs-9" data-kt-element="unit-select">
                                                     @foreach($units as $unit)
-                                                        <option value="{{ $unit->symbol }}">{{ $unit->symbol }}</option>
+                                                        <option value="{{ $unit->symbol }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
                                                     @endforeach
-                                                    <option value="ADD_NEW_UNIT" class="fw-bold text-primary">+ Baru</option>
+                                                    <option value="ADD_NEW_UNIT" class="fw-bold text-primary">-- + Baru --</option>
                                                 </select>
                                             </div>
  
