@@ -41,7 +41,8 @@ class GoodsReceiptAjaxController extends Controller
             ->get()
             ->map(function($receipt) {
                 return [
-                    'id' => $receipt->identifier,
+                    'id' => $receipt->id,
+                    'identifier' => $receipt->identifier,
                     'purchase_requisition_identifier' => $receipt->purchaseRequisition?->identifier,
                     'date' => $receipt->received_date->format('Y-m-d'),
                     'supplier_name' => $receipt->supplier->name,

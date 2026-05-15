@@ -71,6 +71,9 @@ Route::middleware(['auth', 'check.access'])->group(function () {
             Route::get('/', [GoodsReceiptController::class, 'index'])->name('inventory.goods-receipt.index');
             Route::get('/create', [GoodsReceiptController::class, 'create'])->name('inventory.goods-receipt.create');
             Route::post('/store', [GoodsReceiptController::class, 'store'])->name('inventory.goods-receipt.store');
+            Route::get('/edit/{id}', [GoodsReceiptController::class, 'edit'])->name('inventory.goods-receipt.edit');
+            Route::post('/update/{id}', [GoodsReceiptController::class, 'update'])->name('inventory.goods-receipt.update');
+            Route::get('/{id}', [GoodsReceiptController::class, 'show'])->name('inventory.goods-receipt.show');
         });
 
         // Purchase Requisition Routes

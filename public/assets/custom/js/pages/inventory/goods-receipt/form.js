@@ -32,15 +32,15 @@ var TKAppInventoryGoodsReceiptForm = function () {
                     companionToken = response.token;
 
                     if (response.phone_connected) {
-                        // HP is already connected! Show connected panel
-                        // Clear old photo for new nota
-                        $.ajax({
-                            url: hostUrl + "companion/clear-photo/" + companionToken,
-                            type: "POST",
-                            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
-                        });
-
-                        showPanel('#kt_goods_receipt_companion_connected');
+                        // HP is already connected! 
+                        // Only show connected panel if we don't have an existing photo preview
+                        const previewImg = $('#kt_goods_receipt_invoice_preview');
+                        const hasExistingPhoto = previewImg.attr('src') && !previewImg.attr('src').includes('data:image');
+                        
+                        if (!hasExistingPhoto) {
+                            showPanel('#kt_goods_receipt_companion_connected');
+                        }
+                        
                         startCompanionPolling();
                     }
                     // If session exists but phone not connected, just show normal options
@@ -545,6 +545,28 @@ var TKAppInventoryGoodsReceiptForm = function () {
                 return;
             }
 
+            // Confirmation before submit
+            const isUpdate = $(form).data('action-url') ? true : false;
+            Swal.fire({
+                title: isUpdate ? "Simpan Perubahan?" : "Simpan Nota?",
+                text: isUpdate ? "Data nota akan diperbarui sesuai inputan Anda." : "Pastikan data yang diinput sudah sesuai.",
+                icon: "question",
+                showCancelButton: true,
+                buttonsStyling: false,
+                confirmButtonText: "Ya, Simpan!",
+                cancelButtonText: "Batal",
+                customClass: {
+                    confirmButton: "btn btn-primary",
+                    cancelButton: "btn btn-light"
+                }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    submitForm();
+                }
+            });
+        });
+
+        var submitForm = function() {
             submitButton.setAttribute('data-kt-indicator', 'on');
             submitButton.disabled = true;
 
@@ -559,7 +581,7 @@ var TKAppInventoryGoodsReceiptForm = function () {
             }
 
             $.ajax({
-                url: hostUrl + "inventory/goods-receipt/store",
+                url: $(form).data('action-url') || (hostUrl + "inventory/goods-receipt/store"),
                 type: "POST",
                 data: formData,
                 processData: false,
@@ -581,7 +603,7 @@ var TKAppInventoryGoodsReceiptForm = function () {
                         customClass: { confirmButton: "btn btn-primary" }
                     }).then(function (result) {
                         if (result.isConfirmed) {
-                            window.location.href = hostUrl + 'inventory/goods-receipt';
+                            window.location.href = response.redirect || (hostUrl + 'inventory/goods-receipt');
                         }
                     });
                 },
@@ -592,7 +614,7 @@ var TKAppInventoryGoodsReceiptForm = function () {
                     Swal.fire({ text: errorMsg, icon: "error", buttonsStyling: false, confirmButtonText: "Ok", customClass: { confirmButton: "btn btn-primary" } });
                 }
             });
-        });
+        };
     };
 
     return {
@@ -607,6 +629,18 @@ var TKAppInventoryGoodsReceiptForm = function () {
             handleAddManual();
             handleQuickAddSupplier();
             handleSubmit();
+
+            // Initialize listeners for existing items (important for Edit mode)
+            $('#kt_goods_receipt_items_container .goods-receipt-item:not(.d-none)').each(function() {
+                const item = $(this);
+                item.find('input[name="quantity[]"], input[name="price[]"]').on('input', updateTotalCount);
+                item.find('[data-kt-element="remove-item"]').on('click', function() {
+                    item.remove();
+                    updateTotalCount();
+                });
+            });
+
+            updateTotalCount();
 
             // Check for existing companion session on page load
             checkExistingSession();

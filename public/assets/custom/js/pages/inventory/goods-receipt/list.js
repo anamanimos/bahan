@@ -45,7 +45,7 @@ var TKAppInventoryGoodsReceiptList = function () {
             },
             columns: [
                 { data: 'id' },
-                { data: 'id' },
+                { data: 'identifier' },
                 { data: 'purchase_requisition_identifier' },
                 { data: 'date' },
                 { data: 'supplier_name' },
@@ -89,7 +89,10 @@ var TKAppInventoryGoodsReceiptList = function () {
                             </a>
                             <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4" data-kt-menu="true">
                                 <div class="menu-item px-3">
-                                    <a href="#" class="menu-link px-3">Detail Lengkap</a>
+                                    <a href="${hostUrl}inventory/goods-receipt/edit/${row.id}" class="menu-link px-3">Edit Nota</a>
+                                </div>
+                                <div class="menu-item px-3">
+                                    <a href="${hostUrl}inventory/goods-receipt/${row.id}" class="menu-link px-3">Detail Lengkap</a>
                                 </div>
                                 <div class="menu-item px-3">
                                     <a href="#" class="menu-link px-3">Cetak Label</a>
@@ -197,7 +200,7 @@ var TKAppInventoryGoodsReceiptList = function () {
                     <div class="card-header min-h-auto py-4 px-5 collapsible cursor-pointer collapsed" data-bs-toggle="collapse" data-bs-target="#kt_goods_receipt_list_item_${index}">
                         <div class="card-title m-0">
                             <div class="d-flex flex-column">
-                                <span class="text-gray-800 fw-bold fs-6">${row.id}</span>
+                                <span class="text-gray-800 fw-bold fs-6">${row.identifier}</span>
                                 <span class="text-muted fs-8">${row.date} • ${row.supplier_name}</span>
                             </div>
                         </div>
@@ -215,7 +218,8 @@ var TKAppInventoryGoodsReceiptList = function () {
                                     Aksi <i class="ki-duotone ki-down fs-5 ms-2"></i>
                                 </button>
                                 <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4" data-kt-menu="true">
-                                    <div class="menu-item px-3"><a href="#" class="menu-link px-3">Detail Lengkap</a></div>
+                                    <div class="menu-item px-3"><a href="${hostUrl}inventory/goods-receipt/edit/${row.id}" class="menu-link px-3">Edit Nota</a></div>
+                                    <div class="menu-item px-3"><a href="${hostUrl}inventory/goods-receipt/${row.id}" class="menu-link px-3">Detail Lengkap</a></div>
                                     <div class="menu-item px-3"><a href="#" class="menu-link px-3">Cetak Label</a></div>
                                     <div class="separator border-gray-200 my-2"></div>
                                     <div class="menu-item px-3"><a href="#" class="menu-link px-3 text-danger">Hapus</a></div>

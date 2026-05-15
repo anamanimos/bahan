@@ -1,27 +1,32 @@
 @extends('layouts.app')
 
-@section('title', 'Input Penerimaan Barang (Goods Receipt)')
+@section('title', 'Edit Penerimaan Barang (Goods Receipt)')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><span class="bullet bg-gray-500 w-5px h-2px"></span></li>
     <li class="breadcrumb-item text-muted">Inventori</li>
     <li class="breadcrumb-item"><span class="bullet bg-gray-500 w-5px h-2px"></span></li>
-    <li class="breadcrumb-item text-muted">Input Penerimaan</li>
+    <li class="breadcrumb-item text-muted">Edit Penerimaan</li>
 @endsection
 
 @section('content')
 <div class="d-flex flex-column">
     <!--begin::Form-->
-    <form id="kt_goods_receipt_form" class="form">
+    <form id="kt_goods_receipt_form" class="form" data-action-url="{{ route('inventory.goods-receipt.update', $receipt->id) }}">
         <div class="row g-5 g-xl-8">
             <!--begin::Left Column (Header Info)-->
             <div class="col-xl-4">
                 <div class="card card-flush h-lg-100">
                     <div class="card-header pt-7">
-                        <h3 class="card-title align-items-start flex-column">
+                        <div class="card-title align-items-start flex-column">
                             <span class="card-label fw-bold text-gray-800">Informasi Nota</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-7">Lengkapi data surat jalan</span>
-                        </h3>
+                            <span class="text-gray-400 mt-1 fw-semibold fs-7">Edit data surat jalan #{{ $receipt->identifier }}</span>
+                        </div>
+                        <div class="card-toolbar">
+                            <a href="{{ route('inventory.goods-receipt.index') }}" class="btn btn-sm btn-light-primary">
+                                <i class="ki-duotone ki-arrow-left fs-3"><span class="path1"></span><span class="path2"></span></i> Kembali
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Tanggal -->
@@ -29,7 +34,7 @@
                             <label class="required form-label fw-bold">Tanggal Terima</label>
                             <div class="position-relative d-flex align-items-center">
                                 <i class="ki-duotone ki-calendar fs-2 position-absolute mx-4"><span class="path1"></span><span class="path2"></span></i>
-                                <input type="text" class="form-control form-control-solid ps-12" name="date" id="kt_goods_receipt_date" value="{{ date('Y-m-d') }}" />
+                                <input type="text" class="form-control form-control-solid ps-12" name="date" id="kt_goods_receipt_date" value="{{ $receipt->received_date->format('Y-m-d') }}" />
                             </div>
                         </div>
 
@@ -40,7 +45,7 @@
                                 <option></option>
                                 <option value="add_new" data-kt-select2-template="add_new">+ Tambah Toko Baru</option>
                                 @foreach(\App\Models\Supplier::orderBy('name', 'asc')->get() as $supplier)
-                                    <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                    <option value="{{ $supplier->id }}" {{ $receipt->supplier_id == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -49,13 +54,11 @@
                         <div class="mb-0">
                             <label class="required form-label fw-bold">Foto Nota / Surat Jalan</label>
                             <div class="fv-row">
-                                <!-- Hidden file input for gallery pick -->
                                 <input type="file" name="invoice_photo" class="d-none" accept="image/*" id="kt_goods_receipt_invoice_input" />
 
-                                <!-- Option Selector (shown when no photo yet) -->
-                                <div id="kt_goods_receipt_photo_options">
+                                <!-- Option Selector -->
+                                <div id="kt_goods_receipt_photo_options" class="{{ $receipt->invoice_photo_path ? 'd-none' : '' }}">
                                     <div class="d-flex flex-column gap-3">
-                                        <!-- Option 1: Pick from gallery -->
                                         <div class="d-flex align-items-center gap-3 border border-dashed border-primary rounded p-4 cursor-pointer bg-hover-light-primary transition-all" id="kt_goods_receipt_option_gallery">
                                             <div class="d-flex align-items-center justify-content-center rounded-circle bg-light-primary" style="width:48px; height:48px; flex-shrink:0;">
                                                 <i class="ki-duotone ki-picture fs-2 text-primary"><span class="path1"></span><span class="path2"></span></i>
@@ -65,8 +68,6 @@
                                                 <div class="text-muted fs-8">Dari galeri atau file</div>
                                             </div>
                                         </div>
-
-                                        <!-- Option 2: Capture from phone -->
                                         <div class="d-flex align-items-center gap-3 border border-dashed border-success rounded p-4 cursor-pointer bg-hover-light-success transition-all" id="kt_goods_receipt_option_companion">
                                             <div class="d-flex align-items-center justify-content-center rounded-circle bg-light-success" style="width:48px; height:48px; flex-shrink:0;">
                                                 <i class="ki-duotone ki-phone fs-2 text-success"><span class="path1"></span><span class="path2"></span></i>
@@ -75,6 +76,19 @@
                                                 <div class="fw-bold text-gray-800 fs-6">Ambil dari HP</div>
                                                 <div class="text-muted fs-8">Scan QR, foto via kamera HP</div>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Photo Preview -->
+                                <div class="{{ $receipt->invoice_photo_path ? '' : 'd-none' }}" id="kt_goods_receipt_invoice_preview_container">
+                                    <div class="position-relative">
+                                        <img src="{{ $receipt->invoice_photo_path ? asset('storage/' . $receipt->invoice_photo_path) : '' }}" class="img-fluid rounded shadow-sm w-100 mb-2" id="kt_goods_receipt_invoice_preview" />
+                                        <div class="d-flex gap-2 mt-2">
+                                            <button type="button" class="btn btn-sm btn-light-primary flex-fill" id="kt_goods_receipt_change_photo">
+                                                <i class="ki-duotone ki-arrows-loop fs-4 me-1"><span class="path1"></span><span class="path2"></span></i>
+                                                Ganti Foto
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -141,19 +155,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Photo Preview (hidden by default, shown after photo picked/received) -->
-                                <div class="d-none" id="kt_goods_receipt_invoice_preview_container">
-                                    <div class="position-relative">
-                                        <img src="" class="img-fluid rounded shadow-sm w-100 mb-2" id="kt_goods_receipt_invoice_preview" />
-                                        <div class="d-flex gap-2 mt-2">
-                                            <button type="button" class="btn btn-sm btn-light-primary flex-fill" id="kt_goods_receipt_change_photo">
-                                                <i class="ki-duotone ki-arrows-loop fs-4 me-1"><span class="path1"></span><span class="path2"></span></i>
-                                                Ganti Foto
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -167,80 +168,107 @@
                     <div class="card-header pt-7 align-items-center">
                         <h3 class="card-title align-items-start flex-column">
                             <span class="card-label fw-bold text-gray-800">Daftar Barang</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-7" id="kt_goods_receipt_total_items_label">0 Item terdaftar</span>
+                            <span class="text-gray-400 mt-1 fw-semibold fs-7" id="kt_goods_receipt_total_items_label">{{ $receipt->items->count() }} Item terdaftar</span>
                         </h3>
                         <div class="card-toolbar gap-3">
-                            <div class="w-200px d-none d-md-block">
-                                <select class="form-select form-select-solid form-select-sm" id="kt_goods_receipt_add_by_purchase_requisition" data-control="select2" data-placeholder="Tarik dari PR...">
-                                    <option></option>
-                                    @foreach(\App\Models\PurchaseRequisition::whereIn('status', ['Approved', 'Partially Approved'])->orderBy('identifier', 'desc')->get() as $pr)
-                                        <option value="{{ $pr->identifier }}">{{ $pr->identifier }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
                             <button type="button" class="btn btn-light-primary btn-sm" id="kt_goods_receipt_add_manual">
                                 <i class="ki-duotone ki-plus fs-3"></i> Manual
                             </button>
                         </div>
                     </div>
                     <div class="card-body pt-5">
-                        <!-- Mobile PR Search -->
-                        <div class="d-md-none mb-5">
-                            <select class="form-select form-select-solid" id="kt_goods_receipt_add_by_purchase_requisition_mobile" data-control="select2" data-placeholder="Tarik dari PR...">
-                                <option></option>
-                                @foreach(\App\Models\PurchaseRequisition::whereIn('status', ['Approved', 'Partially Approved'])->orderBy('identifier', 'desc')->get() as $pr)
-                                    <option value="{{ $pr->identifier }}">{{ $pr->identifier }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
                         <!--begin::Items Container-->
                         <div id="kt_goods_receipt_items_container">
-                            <div class="text-center py-20 bg-light-primary bg-opacity-30 border border-dashed border-primary rounded mb-5" id="goods_receipt_items_empty">
-                                <i class="ki-duotone ki-delivery-2 fs-3x text-primary mb-3"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span></i>
+                            <div class="text-center py-20 bg-light-primary bg-opacity-30 border border-dashed border-primary rounded mb-5 d-none" id="goods_receipt_items_empty">
+                                <i class="ki-duotone ki-delivery-2 fs-3x text-primary mb-3"><span class="path1"></span><span class="path2"></span></i>
                                 <div class="text-gray-600 fw-semibold">Gunakan tombol di atas untuk menambah item</div>
                             </div>
-                                                    <!-- Item template -->
+                            
+                            <!-- Template (keep hidden) -->
                             <div class="goods-receipt-item d-none mb-4 border border-dashed border-gray-300 rounded shadow-sm" data-kt-element="item">
+                                <!-- Same as create.blade.php template -->
                                 @include('pages.inventory.goods-receipt.partials.item_template', ['units' => $units])
                             </div>
+
+                            @foreach($receipt->items as $index => $receiptItem)
+                                <div class="goods-receipt-item mb-4 border border-dashed border-gray-300 rounded shadow-sm" data-kt-element="item">
+                                    <div class="p-3 bg-light-primary bg-opacity-10 d-flex justify-content-between align-items-center rounded-top border-bottom border-gray-200 cursor-pointer collapsible" 
+                                         data-bs-toggle="collapse" data-bs-target="#kt_goods_receipt_item_edit_{{ $index }}">
+                                        <div class="d-flex align-items-center">
+                                            <i class="ki-duotone ki-down fs-4 me-2 collapsible-active-rotate-180"></i>
+                                            <span class="fw-bold fs-7 text-gray-800" data-kt-element="item-source">
+                                                <span class="badge badge-light-success">Existing Item</span>
+                                            </span>
+                                        </div>
+                                        <button type="button" class="btn btn-icon btn-sm btn-active-light-danger h-25px w-25px" data-kt-element="remove-item">
+                                            <i class="ki-duotone ki-cross fs-3"><span class="path1"></span><span class="path2"></span></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <input type="hidden" name="product_id[]" value="{{ $receiptItem->product_id }}" />
+                                    <input type="hidden" name="order_reference[]" value="{{ $receiptItem->order_reference }}" />
+                                    <input type="hidden" name="unit[]" value="{{ $receiptItem->unit }}" />
+                                    <input type="hidden" name="item_purchase_requisition_item_id[]" value="{{ $receiptItem->purchase_requisition_item_id }}" />
+
+                                    <div id="kt_goods_receipt_item_edit_{{ $index }}" class="collapse show">
+                                        <div class="p-5">
+                                            <div class="row g-5 align-items-start">
+                                                <div class="col-12 col-md-4">
+                                                    <label class="form-label fw-bold fs-8 text-gray-700 mb-1">Nama Barang</label>
+                                                    <div class="fw-bold text-gray-800 fs-7 lh-1 mb-1">{{ $receiptItem->product->name }}</div>
+                                                    <div class="text-muted fs-9">Ref: {{ $receiptItem->order_reference ?: '-' }}</div>
+                                                </div>
+                                                <div class="col-6 col-md-2">
+                                                    <label class="form-label fw-bold fs-8 text-primary mb-1">Jml</label>
+                                                    <input type="number" class="form-control form-control-solid px-3" name="quantity[]" value="{{ $receiptItem->received_quantity }}" step="0.01" />
+                                                </div>
+                                                <div class="col-6 col-md-2">
+                                                    <label class="form-label fw-bold fs-8 text-success mb-1">Harga Satuan</label>
+                                                    <div class="input-group input-group-solid">
+                                                        <span class="input-group-text fs-9 px-2">Rp</span>
+                                                        <input type="number" class="form-control form-control-solid ps-2" name="price[]" value="{{ $receiptItem->unit_price }}" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 col-md-4">
+                                                    <label class="form-label fw-bold fs-8 text-gray-700 mb-1">Catatan</label>
+                                                    <textarea class="form-control form-control-solid fs-8" rows="1" name="notes[]">{{ $receiptItem->notes }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                        <!--end::Items Container-->
                     </div>
                 </div>
             </div>
             <!--end::Right Column-->
         </div>
 
-        <!--begin::Sticky Footer-->
-        <div class="card card-flush shadow-sm sticky-bottom mt-5" style="bottom: 0; z-index: 100; border-top: 1px solid #eee;">
+        <div class="card card-flush shadow-sm sticky-bottom mt-5">
             <div class="card-body p-5">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-5">
                     <div class="d-flex align-items-center gap-10">
                         <div class="d-flex flex-column">
                             <span class="text-gray-400 fw-bold fs-8 text-uppercase">Total Item</span>
-                            <span class="fs-3 fw-bold text-gray-800"><span id="kt_goods_receipt_total_count">0</span> Item</span>
+                            <span class="fs-3 fw-bold text-gray-800"><span id="kt_goods_receipt_total_count">{{ $receipt->items->count() }}</span> Item</span>
                         </div>
                         <div class="d-flex flex-column border-start ps-10">
                             <span class="text-gray-400 fw-bold fs-8 text-uppercase">Total Estimasi</span>
-                            <span class="fs-3 fw-bold text-success">Rp <span id="kt_goods_receipt_total_estimation">0</span></span>
+                            <span class="fs-3 fw-bold text-success">Rp <span id="kt_goods_receipt_total_estimation">{{ number_format($receipt->items->sum(fn($i) => $i->received_quantity * $i->unit_price), 0, ',', '.') }}</span></span>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-success px-10" id="kt_goods_receipt_submit" disabled>
-                        <span class="indicator-label">Simpan Nota Goods Receipt</span>
-                        <span class="indicator-progress">
-                            <span class="spinner-border spinner-border-sm align-middle"></span>
-                        </span>
+                    <button type="submit" class="btn btn-primary px-10" id="kt_goods_receipt_submit">
+                        <span class="indicator-label">Update Nota Goods Receipt</span>
+                        <span class="indicator-progress">Updating... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                     </button>
                 </div>
             </div>
         </div>
-        <!--end::Sticky Footer-->
     </form>
-    <!--end::Form-->
 </div>
 
-<!-- Modal: Quick Add Supplier -->
+<!-- Modal: Quick Add Supplier (Copied from create) -->
 <div class="modal fade" id="modal_quick_add_supplier" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered mw-500px">
         <div class="modal-content">

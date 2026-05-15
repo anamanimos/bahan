@@ -224,4 +224,154 @@ class GoodsReceiptController extends Controller
             return response()->json($response);
         });
     }
+
+    /**
+     * Display the specified goods receipt.
+     */
+    public function show($id)
+    {
+        $receipt = \App\Models\GoodsReceipt::with(['items.product', 'supplier', 'purchaseRequisition'])->findOrFail($id);
+        return view('pages.inventory.goods-receipt.show', compact('receipt'));
+    }
+
+    /**
+     * Show the form for editing the specified goods receipt.
+     */
+    public function edit($id)
+    {
+        $receipt = \App\Models\GoodsReceipt::with(['items.product', 'supplier'])->findOrFail($id);
+        $units = Unit::orderBy('name', 'asc')->get();
+        return view('pages.inventory.goods-receipt.edit', compact('receipt', 'units'));
+    }
+
+    /**
+     * Update the specified goods receipt in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'invoice_photo' => 'nullable|image|max:2048',
+            'quantity' => 'required|array',
+            'quantity.*' => 'required|numeric|min:0.01',
+            'price' => 'required|array',
+            'price.*' => 'required|numeric|min:0',
+        ]);
+
+        return \DB::transaction(function () use ($request, $id) {
+            $goodsReceipt = \App\Models\GoodsReceipt::findOrFail($id);
+            
+            $invoicePath = $goodsReceipt->invoice_photo_path;
+            if ($request->hasFile('invoice_photo')) {
+                // Delete old photo if exists
+                if ($invoicePath && \Storage::disk('public')->exists($invoicePath)) {
+                    \Storage::disk('public')->delete($invoicePath);
+                }
+                $invoicePath = $request->file('invoice_photo')->store('invoices', 'public');
+            } elseif ($request->companion_photo_url) {
+                // Photo from companion camera
+                $companionSession = \App\Models\CompanionSession::where('user_id', auth()->id())
+                    ->whereNotNull('photo_path')
+                    ->latest('photo_uploaded_at')
+                    ->first();
+                
+                if ($companionSession && $companionSession->photo_path) {
+                    // Delete old photo if exists
+                    if ($invoicePath && \Storage::disk('public')->exists($invoicePath)) {
+                        \Storage::disk('public')->delete($invoicePath);
+                    }
+
+                    $sourcePath = storage_path('app/public/' . $companionSession->photo_path);
+                    if (file_exists($sourcePath)) {
+                        $newFilename = 'invoices/' . basename($companionSession->photo_path);
+                        $destPath = storage_path('app/public/' . $newFilename);
+                        if (!is_dir(dirname($destPath))) mkdir(dirname($destPath), 0755, true);
+                        rename($sourcePath, $destPath);
+                        $invoicePath = $newFilename;
+                    }
+                }
+            }
+
+            $goodsReceipt->update([
+                'received_date' => $request->date,
+                'supplier_id' => $request->supplier_id,
+                'invoice_photo_path' => $invoicePath,
+            ]);
+
+            // Update items
+            // Note: This is a simplified version. For a production system, 
+            // we should handle adding/removing items and updating Lots/Sales.
+            // For now, we update existing items matching by index if possible,
+            // or just update based on the request.
+            
+            foreach ($request->quantity as $index => $qty) {
+                $productId = $request->product_id[$index];
+                $price = $request->price[$index];
+                $notes = $request->notes[$index] ?? null;
+                $orderRef = $request->order_reference[$index] ?? null;
+                $unit = $request->unit[$index] ?? 'Pcs';
+
+                // Find existing item by index or create new
+                $item = $goodsReceipt->items()->skip($index)->first();
+                
+                if ($item) {
+                    $item->update([
+                        'product_id' => $productId,
+                        'received_quantity' => $qty,
+                        'unit' => $unit,
+                        'unit_price' => $price,
+                        'order_reference' => $orderRef,
+                        'notes' => $notes,
+                    ]);
+
+                    // Update Lot if it exists
+                    $lot = \App\Models\Lot::where('goods_receipt_item_id', $item->id)->first();
+                    if ($lot) {
+                        $lot->update([
+                            'product_id' => $productId,
+                            'initial_quantity' => $qty,
+                            'remaining_quantity' => $qty - ($lot->initial_quantity - $lot->remaining_quantity),
+                            'unit_cost' => $price,
+                        ]);
+                    }
+                } else {
+                    // New item added during edit
+                    $item = $goodsReceipt->items()->create([
+                        'product_id' => $productId,
+                        'received_quantity' => $qty,
+                        'unit' => $unit,
+                        'unit_price' => $price,
+                        'order_reference' => $orderRef,
+                        'notes' => $notes,
+                    ]);
+
+                    // Create Lot
+                    \App\Models\Lot::create([
+                        'identifier' => $goodsReceipt->identifier . '-' . ($index + 1),
+                        'product_id' => $productId,
+                        'goods_receipt_item_id' => $item->id,
+                        'initial_quantity' => $qty,
+                        'remaining_quantity' => $qty,
+                        'unit_cost' => $price,
+                    ]);
+                }
+            }
+
+            // Remove items that are no longer in the request
+            if ($goodsReceipt->items()->count() > count($request->quantity)) {
+                $itemsToDrop = $goodsReceipt->items()->skip(count($request->quantity))->get();
+                foreach ($itemsToDrop as $item) {
+                    \App\Models\Lot::where('goods_receipt_item_id', $item->id)->delete();
+                    $item->delete();
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Goods Receipt ' . $goodsReceipt->identifier . ' berhasil diperbarui!',
+                'redirect' => route('inventory.goods-receipt.index')
+            ]);
+        });
+    }
 }
