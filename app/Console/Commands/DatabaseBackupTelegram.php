@@ -99,7 +99,7 @@ class DatabaseBackupTelegram extends Command
 
             if ($response->successful()) {
                 $this->info('Backup berhasil terkirim!');
-                unlink($finalPath); // Bersihkan file backup di server
+                // Jangan hapus instan agar muncul di tabel UI
             } else {
                 $this->error('Gagal mengirim ke Telegram: ' . $response->body());
                 Log::error('Telegram Backup Failed: ' . $response->body());
@@ -107,6 +107,17 @@ class DatabaseBackupTelegram extends Command
         } catch (\Exception $e) {
             $this->error('Terjadi kesalahan: ' . $e->getMessage());
             Log::error('Telegram Backup Exception: ' . $e->getMessage());
+        }
+
+        // Pembersihan Otomatis: Hapus backup yang lebih lama dari 7 hari di server
+        $allFiles = \Storage::disk('local')->files();
+        foreach ($allFiles as $file) {
+            if (str_starts_with($file, 'backup_') && (str_ends_with($file, '.sql') || str_ends_with($file, '.zip'))) {
+                $lastModified = \Storage::disk('local')->lastModified($file);
+                if (time() - $lastModified > (86400 * 7)) { // 7 hari
+                    \Storage::disk('local')->delete($file);
+                }
+            }
         }
 
         return 0;
