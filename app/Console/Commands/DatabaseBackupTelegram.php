@@ -45,21 +45,25 @@ class DatabaseBackupTelegram extends Command
         $filename = "backup_" . $dbName . "_" . date('Y-m-d_H-i-s') . ".sql";
         $filePath = storage_path("app/" . $filename);
 
-        // Path ke mysqldump di Laragon
-        $mysqldumpPath = 'D:\laragon\bin\mysql\mysql-8.0.30-winx64\bin\mysqldump.exe'; 
+        // Deteksi Path mysqldump berdasarkan OS
+        if (PHP_OS_FAMILY === 'Windows') {
+            $mysqldumpPath = 'D:\laragon\bin\mysql\mysql-8.0.30-winx64\bin\mysqldump.exe'; 
+        } else {
+            $mysqldumpPath = 'mysqldump'; // Di Ubuntu biasanya sudah ada di PATH
+        }
+
         $errorLogPath = storage_path("app/backup_error.log");
 
-        // Perintah dump: hanya stdout (data) yang ke file sql
-        // Stderr (error) dibuang ke file log terpisah
+        // Gunakan escapeshellarg untuk keamanan di kedua OS
         $command = sprintf(
-            '"%s" --user=%s --password=%s --host=%s %s > "%s" 2> "%s"',
-            $mysqldumpPath,
+            '%s --user=%s --password=%s --host=%s %s > %s 2> %s',
+            PHP_OS_FAMILY === 'Windows' ? '"' . $mysqldumpPath . '"' : escapeshellarg($mysqldumpPath),
             escapeshellarg($dbUser),
             escapeshellarg($dbPass),
             escapeshellarg($dbHost),
             escapeshellarg($dbName),
-            $filePath,
-            $errorLogPath
+            escapeshellarg($filePath),
+            escapeshellarg($errorLogPath)
         );
 
         $output = [];
