@@ -150,11 +150,12 @@
                         </div>
                     </div>
                     <div class="card-body pt-0">
-                        <a href="{{ asset('storage/' . $receipt->invoice_photo_path) }}" target="_blank">
-                            <img src="{{ asset('storage/' . $receipt->invoice_photo_path) }}" class="img-fluid rounded shadow-sm w-100" />
+                        @php $photoUrl = \App\Services\MediaSyncService::url($receipt->invoice_photo_path); @endphp
+                        <a href="{{ $photoUrl }}" target="_blank">
+                            <img src="{{ $photoUrl }}" class="img-fluid rounded shadow-sm w-100" />
                         </a>
                         <div class="text-center mt-3">
-                            <a href="{{ asset('storage/' . $receipt->invoice_photo_path) }}" target="_blank" class="btn btn-sm btn-light">
+                            <a href="{{ $photoUrl }}" target="_blank" class="btn btn-sm btn-light">
                                 <i class="ki-duotone ki-magnifier fs-4 me-1"><span class="path1"></span><span class="path2"></span></i> Lihat Ukuran Penuh
                             </a>
                         </div>

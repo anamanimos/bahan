@@ -257,6 +257,22 @@
                                         <span class="menu-title">Webhook</span>
                                     </a>
                                 </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('admin/media-sync*') ? 'active' : '' }}" href="{{ route('admin.media-sync.index') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-cloud fs-2"><span class="path1"></span><span class="path2"></span></i>
+                                        </span>
+                                        <span class="menu-title">Singkronasi Media</span>
+                                    </a>
+                                </div>
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->is('admin/backup*') ? 'active' : '' }}" href="{{ route('admin.backup.index') }}">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-cloud-change fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                                        </span>
+                                        <span class="menu-title">Database Backup</span>
+                                    </a>
+                                </div>
                                 @endrole
                             </div>
                         </div>

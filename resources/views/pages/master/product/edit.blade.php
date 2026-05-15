@@ -57,7 +57,7 @@
                             <div class="d-flex flex-wrap gap-5" id="kt_ecommerce_add_product_media_items">
                                 @if($product->image_path)
                                     <div class="position-relative w-125px h-125px">
-                                        <img src="{{ asset('storage/' . $product->image_path) }}" class="w-100 h-100 object-fit-cover rounded border" alt="Product Image" />
+                                        <img src="{{ \App\Services\MediaSyncService::url($product->image_path) }}" class="w-100 h-100 object-fit-cover rounded border" alt="Product Image" />
                                         <div class="position-absolute top-0 end-0 m-n2">
                                             <button type="button" class="btn btn-icon btn-circle btn-danger w-20px h-20px shadow" title="Hapus" onclick="$(this).parent().parent().remove()">
                                                 <i class="ki-duotone ki-cross fs-9"><span class="path1"></span><span class="path2"></span></i>

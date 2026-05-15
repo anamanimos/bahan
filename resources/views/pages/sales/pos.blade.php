@@ -53,7 +53,7 @@
                             <div class="card-body p-3">
                                 <div class="overlay-wrapper mb-3 text-center">
                                     @if($product->image_path)
-                                        <img src="{{ asset('storage/'.$product->image_path) }}" alt="{{ $product->name }}" class="aspect-ratio-1 object-fit-cover rounded" />
+                                        <img src="{{ \App\Services\MediaSyncService::url($product->image_path) }}" alt="{{ $product->name }}" class="aspect-ratio-1 object-fit-cover rounded" />
                                     @else
                                         <div class="aspect-ratio-1 bg-light rounded d-flex align-items-center justify-content-center">
                                             <img src="{{ asset('assets/media/svg/files/blank-image.svg') }}" class="w-50px" alt="No Image" />

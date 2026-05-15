@@ -18,6 +18,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\ApiTokenController;
 use App\Http\Controllers\CompanionController;
 use App\Http\Controllers\CompanionUploadController;
+use App\Http\Controllers\Admin\MediaSyncController;
 
 // Companion Camera routes (public — phone accesses via QR token, no auth)
 Route::get('/cam/{token}', [CompanionController::class, 'show'])->name('companion.camera');
@@ -47,17 +48,34 @@ Route::middleware(['auth', 'check.access'])->group(function () {
         Route::post('/admin/api/token', [ApiTokenController::class, 'store']);
         Route::delete('/admin/api/token/{id}', [ApiTokenController::class, 'destroy']);
 
-        Route::prefix('admin/webhook')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\WebhookController::class, 'index'])->name('admin.webhook.index');
-            Route::get('/create', [\App\Http\Controllers\Admin\WebhookController::class, 'create'])->name('admin.webhook.create');
-            Route::post('/store', [\App\Http\Controllers\Admin\WebhookController::class, 'store'])->name('admin.webhook.store');
-            Route::get('/edit/{webhook}', [\App\Http\Controllers\Admin\WebhookController::class, 'edit'])->name('admin.webhook.edit');
-            Route::put('/update/{webhook}', [\App\Http\Controllers\Admin\WebhookController::class, 'update'])->name('admin.webhook.update');
-            Route::delete('/delete/{webhook}', [\App\Http\Controllers\Admin\WebhookController::class, 'destroy'])->name('admin.webhook.destroy');
-            Route::get('/documentation', [\App\Http\Controllers\Admin\WebhookController::class, 'documentation'])->name('admin.webhook.documentation');
-            Route::get('/download-markdown', [\App\Http\Controllers\Admin\WebhookController::class, 'downloadMarkdown'])->name('admin.webhook.download-markdown');
+            Route::prefix('admin/webhook')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\WebhookController::class, 'index'])->name('admin.webhook.index');
+                Route::get('/create', [\App\Http\Controllers\Admin\WebhookController::class, 'create'])->name('admin.webhook.create');
+                Route::post('/store', [\App\Http\Controllers\Admin\WebhookController::class, 'store'])->name('admin.webhook.store');
+                Route::get('/edit/{webhook}', [\App\Http\Controllers\Admin\WebhookController::class, 'edit'])->name('admin.webhook.edit');
+                Route::put('/update/{webhook}', [\App\Http\Controllers\Admin\WebhookController::class, 'update'])->name('admin.webhook.update');
+                Route::delete('/delete/{webhook}', [\App\Http\Controllers\Admin\WebhookController::class, 'destroy'])->name('admin.webhook.destroy');
+                Route::get('/documentation', [\App\Http\Controllers\Admin\WebhookController::class, 'documentation'])->name('admin.webhook.documentation');
+                Route::get('/download-markdown', [\App\Http\Controllers\Admin\WebhookController::class, 'downloadMarkdown'])->name('admin.webhook.download-markdown');
+            });
+
+            // Media Sync Routes
+            Route::prefix('admin/media-sync')->group(function () {
+                Route::get('/', [MediaSyncController::class, 'index'])->name('admin.media-sync.index');
+                Route::post('sync', [MediaSyncController::class, 'sync'])->name('admin.media-sync.sync');
+                Route::post('sync-all', [MediaSyncController::class, 'syncAll'])->name('admin.media-sync.sync-all');
+                Route::post('delete-local', [MediaSyncController::class, 'deleteLocal'])->name('admin.media-sync.delete-local');
+                Route::post('delete-local-all', [MediaSyncController::class, 'deleteLocalAll'])->name('admin.media-sync.delete-local-all');
+            });
+
+            // Database Backup Routes
+            Route::prefix('admin/backup')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\DatabaseBackupController::class, 'index'])->name('admin.backup.index');
+                Route::post('/run', [\App\Http\Controllers\Admin\DatabaseBackupController::class, 'runBackup'])->name('admin.backup.run');
+                Route::get('/download/{filename}', [\App\Http\Controllers\Admin\DatabaseBackupController::class, 'download'])->name('admin.backup.download');
+                Route::delete('/delete/{filename}', [\App\Http\Controllers\Admin\DatabaseBackupController::class, 'delete'])->name('admin.backup.delete');
+            });
         });
-    });
 
     Route::get('/', function () {
         return redirect('/dashboard');

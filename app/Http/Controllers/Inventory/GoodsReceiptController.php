@@ -61,8 +61,10 @@ class GoodsReceiptController extends Controller
             $identifier = 'GR-' . $date . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
 
             $invoicePath = null;
+            $syncService = app(\App\Services\MediaSyncService::class);
+
             if ($request->hasFile('invoice_photo')) {
-                $invoicePath = $request->file('invoice_photo')->store('invoices', 'public');
+                $invoicePath = $syncService->directUpload($request->file('invoice_photo'), 'invoices');
             } elseif ($request->companion_photo_url) {
                 // Photo from companion camera
                 $companionSession = \App\Models\CompanionSession::where('user_id', auth()->id())
@@ -74,10 +76,33 @@ class GoodsReceiptController extends Controller
                     $sourcePath = storage_path('app/public/' . $companionSession->photo_path);
                     if (file_exists($sourcePath)) {
                         $newFilename = 'invoices/' . basename($companionSession->photo_path);
-                        $destPath = storage_path('app/public/' . $newFilename);
-                        if (!is_dir(dirname($destPath))) mkdir(dirname($destPath), 0755, true);
-                        rename($sourcePath, $destPath);
-                        $invoicePath = $newFilename;
+                        
+                        // Direct upload content from local temp path to cloud
+                        $content = file_get_contents($sourcePath);
+                        $mime = mime_content_type($sourcePath);
+                        
+                        // Use sync logic but manually to avoid waiting for observer if possible
+                        // Actually, just save as local and let observer handle it is safer for "kecuali terpaksa"
+                        // But user wants cloud-first.
+                        $uploaded = false;
+                        if ($syncService->primaryDisk) {
+                            Storage::disk($syncService->primaryDisk)->put($newFilename, $content, ['visibility' => 'public', 'ContentType' => $mime]);
+                            $uploaded = true;
+                        }
+                        if ($syncService->secondaryDisk) {
+                            Storage::disk($syncService->secondaryDisk)->put($newFilename, $content, ['visibility' => 'public', 'ContentType' => $mime]);
+                        }
+
+                        if ($uploaded) {
+                            unlink($sourcePath); // Delete temp file from companion
+                            $invoicePath = $newFilename;
+                        } else {
+                            // Fallback to local
+                            $destPath = storage_path('app/public/' . $newFilename);
+                            if (!is_dir(dirname($destPath))) mkdir(dirname($destPath), 0755, true);
+                            rename($sourcePath, $destPath);
+                            $invoicePath = $newFilename;
+                        }
                     }
                 }
             }
@@ -263,12 +288,16 @@ class GoodsReceiptController extends Controller
             $goodsReceipt = \App\Models\GoodsReceipt::findOrFail($id);
             
             $invoicePath = $goodsReceipt->invoice_photo_path;
+            $syncService = app(\App\Services\MediaSyncService::class);
+
             if ($request->hasFile('invoice_photo')) {
-                // Delete old photo if exists
-                if ($invoicePath && \Storage::disk('public')->exists($invoicePath)) {
-                    \Storage::disk('public')->delete($invoicePath);
+                // Delete old photo if exists on any disk
+                if ($invoicePath) {
+                    Storage::disk('public')->delete($invoicePath);
+                    if ($syncService->primaryDisk) Storage::disk($syncService->primaryDisk)->delete($invoicePath);
+                    if ($syncService->secondaryDisk) Storage::disk($syncService->secondaryDisk)->delete($invoicePath);
                 }
-                $invoicePath = $request->file('invoice_photo')->store('invoices', 'public');
+                $invoicePath = $syncService->directUpload($request->file('invoice_photo'), 'invoices');
             } elseif ($request->companion_photo_url) {
                 // Photo from companion camera
                 $companionSession = \App\Models\CompanionSession::where('user_id', auth()->id())
@@ -277,18 +306,37 @@ class GoodsReceiptController extends Controller
                     ->first();
                 
                 if ($companionSession && $companionSession->photo_path) {
-                    // Delete old photo if exists
-                    if ($invoicePath && \Storage::disk('public')->exists($invoicePath)) {
-                        \Storage::disk('public')->delete($invoicePath);
-                    }
-
                     $sourcePath = storage_path('app/public/' . $companionSession->photo_path);
                     if (file_exists($sourcePath)) {
+                        // Delete old photo
+                        if ($goodsReceipt->invoice_photo_path) {
+                            Storage::disk('public')->delete($goodsReceipt->invoice_photo_path);
+                            if ($syncService->primaryDisk) Storage::disk($syncService->primaryDisk)->delete($goodsReceipt->invoice_photo_path);
+                            if ($syncService->secondaryDisk) Storage::disk($syncService->secondaryDisk)->delete($goodsReceipt->invoice_photo_path);
+                        }
+
                         $newFilename = 'invoices/' . basename($companionSession->photo_path);
-                        $destPath = storage_path('app/public/' . $newFilename);
-                        if (!is_dir(dirname($destPath))) mkdir(dirname($destPath), 0755, true);
-                        rename($sourcePath, $destPath);
-                        $invoicePath = $newFilename;
+                        $content = file_get_contents($sourcePath);
+                        $mime = mime_content_type($sourcePath);
+                        
+                        $uploaded = false;
+                        if ($syncService->primaryDisk) {
+                            Storage::disk($syncService->primaryDisk)->put($newFilename, $content, ['visibility' => 'public', 'ContentType' => $mime]);
+                            $uploaded = true;
+                        }
+                        if ($syncService->secondaryDisk) {
+                            Storage::disk($syncService->secondaryDisk)->put($newFilename, $content, ['visibility' => 'public', 'ContentType' => $mime]);
+                        }
+
+                        if ($uploaded) {
+                            unlink($sourcePath);
+                            $invoicePath = $newFilename;
+                        } else {
+                            $destPath = storage_path('app/public/' . $newFilename);
+                            if (!is_dir(dirname($destPath))) mkdir(dirname($destPath), 0755, true);
+                            rename($sourcePath, $destPath);
+                            $invoicePath = $newFilename;
+                        }
                     }
                 }
             }

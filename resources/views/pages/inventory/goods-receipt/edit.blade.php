@@ -81,16 +81,11 @@
                                 </div>
 
                                 <!-- Photo Preview -->
-                                <div class="{{ $receipt->invoice_photo_path ? '' : 'd-none' }}" id="kt_goods_receipt_invoice_preview_container">
-                                    <div class="position-relative">
-                                        <img src="{{ $receipt->invoice_photo_path ? asset('storage/' . $receipt->invoice_photo_path) : '' }}" class="img-fluid rounded shadow-sm w-100 mb-2" id="kt_goods_receipt_invoice_preview" />
-                                        <div class="d-flex gap-2 mt-2">
-                                            <button type="button" class="btn btn-sm btn-light-primary flex-fill" id="kt_goods_receipt_change_photo">
-                                                <i class="ki-duotone ki-arrows-loop fs-4 me-1"><span class="path1"></span><span class="path2"></span></i>
-                                                Ganti Foto
-                                            </button>
-                                        </div>
-                                    </div>
+                                <div id="kt_goods_receipt_invoice_preview_container" class="{{ $receipt->invoice_photo_path ? '' : 'd-none' }} text-center">
+                                    <img id="kt_goods_receipt_invoice_preview" src="{{ $receipt->invoice_photo_path ? \App\Services\MediaSyncService::url($receipt->invoice_photo_path) : '' }}" class="img-fluid rounded shadow-sm w-100 mb-3" />
+                                    <button type="button" id="kt_goods_receipt_change_photo" class="btn btn-sm btn-light-primary">
+                                        <i class="ki-duotone ki-pencil fs-4 me-1"><span class="path1"></span><span class="path2"></span></i> Ganti Foto
+                                    </button>
                                 </div>
 
                                 <!-- QR Companion Panel (hidden by default) -->

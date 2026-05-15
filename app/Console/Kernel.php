@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Jalankan sinkronisasi media setiap jam 02:00 pagi
+        $schedule->command('media:sync-daily')->dailyAt('02:00')->withoutOverlapping();
+
+        // Jalankan backup database ke Telegram setiap jam 03:00 pagi
+        $schedule->command('db:backup-telegram')->dailyAt('03:00');
     }
 
     /**

@@ -82,8 +82,8 @@ class ProductController extends Controller
 
         // Handle Image Upload
         if ($request->hasFile('product_image')) {
-            $path = $request->file('product_image')->store('products', 'public');
-            $data['image_path'] = $path;
+            $syncService = app(\App\Services\MediaSyncService::class);
+            $data['image_path'] = $syncService->directUpload($request->file('product_image'), 'products');
         }
 
         $product = Product::create($data);
@@ -156,12 +156,14 @@ class ProductController extends Controller
 
         // Handle Image Upload
         if ($request->hasFile('product_image')) {
+            $syncService = app(\App\Services\MediaSyncService::class);
             // Delete old image if exists
-            if ($product->image_path && \Storage::disk('public')->exists($product->image_path)) {
+            if ($product->image_path) {
                 \Storage::disk('public')->delete($product->image_path);
+                if ($syncService->primaryDisk) \Storage::disk($syncService->primaryDisk)->delete($product->image_path);
+                if ($syncService->secondaryDisk) \Storage::disk($syncService->secondaryDisk)->delete($product->image_path);
             }
-            $path = $request->file('product_image')->store('products', 'public');
-            $data['image_path'] = $path;
+            $data['image_path'] = $syncService->directUpload($request->file('product_image'), 'products');
         }
 
         $product->update($data);
